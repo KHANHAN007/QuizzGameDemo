@@ -45,8 +45,8 @@ export default function QuestionForm({ initialValues, onSubmit, onCancel }) {
         label="Câu hỏi"
         rules={[{ required: true, message: 'Vui lòng nhập câu hỏi!' }]}
       >
-        <Input.TextArea 
-          rows={3} 
+        <Input.TextArea
+          rows={3}
           placeholder="Nhập câu hỏi của bạn..."
           showCount
           maxLength={500}
@@ -64,7 +64,7 @@ export default function QuestionForm({ initialValues, onSubmit, onCancel }) {
                   rules={[{ required: true, message: 'Vui lòng nhập lựa chọn!' }]}
                   style={{ marginBottom: 12 }}
                 >
-                  <Input 
+                  <Input
                     placeholder={`Lựa chọn ${index + 1}`}
                     prefix={<span style={{ marginRight: 8 }}>{String.fromCharCode(65 + index)}.</span>}
                   />
@@ -95,8 +95,8 @@ export default function QuestionForm({ initialValues, onSubmit, onCancel }) {
         label="Giải thích (tùy chọn)"
         tooltip="Giải thích tại sao đáp án này đúng"
       >
-        <Input.TextArea 
-          rows={2} 
+        <Input.TextArea
+          rows={2}
           placeholder="VD: 2 cộng 3 bằng 5..."
           showCount
           maxLength={300}

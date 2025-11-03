@@ -252,20 +252,29 @@ async function updateQuestion(env, id, data) {
     try {
         const { setId, text, choices, correctIndex, explanation } = data;
 
+        // Get current question to preserve setId if not provided
+        const current = await env.DB.prepare('SELECT * FROM questions WHERE id = ?')
+            .bind(id)
+            .first();
+        
+        if (!current) {
+            return errorResponse('Question not found', 404);
+        }
+
         await env.DB.prepare(`
       UPDATE questions 
       SET setId = ?, text = ?, choice1 = ?, choice2 = ?, choice3 = ?, choice4 = ?, 
           correctIndex = ?, explanation = ?
       WHERE id = ?
     `).bind(
-            setId || 1,
+            setId !== undefined ? setId : current.setId, // Keep original setId if not provided
             text,
             choices[0],
             choices[1],
             choices[2],
             choices[3],
             correctIndex,
-            explanation || '',
+            explanation !== undefined ? explanation : current.explanation,
             id
         ).run();
 
@@ -376,7 +385,7 @@ async function gradeQuiz(env, data) {
                 questionText: q.text,
                 correctIndex: q.correctIndex,
                 correctAnswer: [q.choice1, q.choice2, q.choice3, q.choice4][q.correctIndex],
-                yourAnswer: [q.choice1, q.choice2, q.choice3, q.choice4][answer.answerIndex] || 'Chưa chọn',
+                yourAnswer: [q.choice1, q.choice2, q.choice3, q.choice4][answer.answerIndex] || 'Not answered',
                 yourAnswerIndex: answer.answerIndex,
                 isCorrect,
                 explanation: q.explanation

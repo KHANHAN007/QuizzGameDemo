@@ -136,7 +136,7 @@ export default function Admin() {
       setSetModalVisible(false)
       await loadQuestionSets()
       setSelectedSetId(response.data.id)
-      
+
       // Auto switch to questions tab and open add question modal
       setActiveTab('questions')
       setTimeout(() => {
