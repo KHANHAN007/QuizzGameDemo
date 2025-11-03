@@ -27,6 +27,7 @@ import {
 export default function Admin() {
   const [questions, setQuestions] = useState([])
   const [questionSets, setQuestionSets] = useState([])
+  const [allQuestions, setAllQuestions] = useState([]) // For counting
   const [selectedSetId, setSelectedSetId] = useState(null)
   const [loading, setLoading] = useState(false)
   const [questionModalVisible, setQuestionModalVisible] = useState(false)
@@ -36,6 +37,7 @@ export default function Admin() {
 
   useEffect(() => {
     loadQuestionSets()
+    loadAllQuestions()
   }, [])
 
   useEffect(() => {
@@ -43,6 +45,15 @@ export default function Admin() {
       loadQuestions(selectedSetId)
     }
   }, [selectedSetId])
+
+  async function loadAllQuestions() {
+    try {
+      const response = await fetchQuestions() // Get all questions
+      setAllQuestions(response.data)
+    } catch (error) {
+      console.error('Could not load all questions')
+    }
+  }
 
   async function loadQuestionSets() {
     try {
@@ -60,7 +71,12 @@ export default function Admin() {
     setLoading(true)
     try {
       const response = await fetchQuestions(setId)
-      setQuestions(response.data)
+      // Transform backend data to frontend format
+      const transformedQuestions = response.data.map(q => ({
+        ...q,
+        choices: [q.choice1, q.choice2, q.choice3, q.choice4]
+      }))
+      setQuestions(transformedQuestions)
     } catch (error) {
       message.error('Không thể tải câu hỏi')
     } finally {
@@ -74,6 +90,7 @@ export default function Admin() {
       message.success('✅ Đã thêm câu hỏi mới!')
       setQuestionModalVisible(false)
       loadQuestions(selectedSetId)
+      loadAllQuestions() // Reload for count
     } catch (error) {
       message.error('Không thể tạo câu hỏi')
     }
@@ -86,6 +103,7 @@ export default function Admin() {
       setQuestionModalVisible(false)
       setEditingQuestion(null)
       loadQuestions(selectedSetId)
+      loadAllQuestions() // Reload for count
     } catch (error) {
       message.error('Không thể cập nhật câu hỏi')
     }
@@ -96,6 +114,7 @@ export default function Admin() {
       await deleteQuestion(id)
       message.success('🗑️ Đã xóa câu hỏi!')
       loadQuestions(selectedSetId)
+      loadAllQuestions() // Reload for count
     } catch (error) {
       message.error('Không thể xóa câu hỏi')
     }
@@ -105,7 +124,7 @@ export default function Admin() {
     try {
       const response = await createQuestionSet(values)
       message.success('✅ Đã tạo danh sách mới!')
-      setsetQuestionModalVisible(false)
+      setSetModalVisible(false)
       await loadQuestionSets()
       setSelectedSetId(response.data.id)
     } catch (error) {
@@ -117,7 +136,7 @@ export default function Admin() {
     try {
       await updateQuestionSet(editingSet.id, values)
       message.success('✅ Đã cập nhật danh sách!')
-      setsetQuestionModalVisible(false)
+      setSetModalVisible(false)
       setEditingSet(null)
       loadQuestionSets()
     } catch (error) {
@@ -181,12 +200,12 @@ export default function Admin() {
 
   function openEditSetModal(set) {
     setEditingSet(set)
-    setsetQuestionModalVisible(true)
+    setSetModalVisible(true)
   }
 
   function openCreateSetModal() {
     setEditingSet(null)
-    setsetQuestionModalVisible(true)
+    setSetModalVisible(true)
   }
 
   const questionColumns = [
@@ -266,7 +285,7 @@ export default function Admin() {
         <Space>
           <FolderOutlined />
           <strong>{name}</strong>
-          <Tag color="blue">{record.questionCount} câu</Tag>
+          <Tag color="blue">{allQuestions.filter(q => q.setId === record.id).length} câu</Tag>
         </Space>
       )
     },
@@ -479,7 +498,7 @@ export default function Admin() {
             : handleCreateSet
           }
           onCancel={() => {
-            setsetQuestionModalVisible(false)
+            setSetModalVisible(false)
             setEditingSet(null)
           }}
         />

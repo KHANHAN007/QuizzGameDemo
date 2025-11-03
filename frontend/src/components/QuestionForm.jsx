@@ -15,11 +15,17 @@ export default function QuestionForm({ initialValues, onSubmit, onCancel }) {
   function handleSubmit() {
     form.validateFields()
       .then(values => {
-        // Ensure we have exactly 4 choices
-        while (values.choices.length < 4) {
-          values.choices.push('')
+        // Transform to backend format
+        const backendFormat = {
+          text: values.text,
+          choice1: values.choices[0],
+          choice2: values.choices[1],
+          choice3: values.choices[2],
+          choice4: values.choices[3],
+          correctIndex: values.correctIndex,
+          explanation: values.explanation || ''
         }
-        onSubmit(values)
+        onSubmit(backendFormat)
       })
       .catch(info => {
         console.log('Validation failed:', info)
