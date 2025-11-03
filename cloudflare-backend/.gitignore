@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+package-lock.json
+npm-debug.log*
+
+# Wrangler
+.wrangler/
+.dev.vars
+.mf/
+
+# Build
+dist/
+.cache/
+
+# Local database
+*.db
+*.sqlite
+*.sqlite3
+
+# Migration files (nếu có data nhạy cảm)
+migration.sql
+
+# Environment
+.env
+.env.local
+.env.production
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo

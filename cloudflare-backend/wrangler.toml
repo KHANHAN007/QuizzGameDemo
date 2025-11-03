@@ -1,0 +1,16 @@
+name = "quiz-game-api"
+main = "src/index.js"
+compatibility_date = "2024-11-01"
+
+# D1 Database binding
+[[d1_databases]]
+binding = "DB"
+database_name = "quiz-game-db"
+database_id = "77b7cad7-2620-4c79-94b3-5969dc1f93e7"
+
+# CORS settings
+[env.production]
+vars = { ENVIRONMENT = "production" }
+
+[env.development]
+vars = { ENVIRONMENT = "development" }

@@ -1,0 +1,27 @@
+{
+  "name": "quiz-game-cloudflare-backend",
+  "version": "1.0.0",
+  "description": "Quiz Game backend on Cloudflare Workers + D1",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "tail": "wrangler tail",
+    "db:create": "wrangler d1 create quiz-game-db",
+    "db:init": "wrangler d1 execute quiz-game-db --local --file=./schema.sql",
+    "db:init:remote": "wrangler d1 execute quiz-game-db --remote --file=./schema.sql",
+    "db:seed": "wrangler d1 execute quiz-game-db --local --file=./seed.sql",
+    "db:seed:remote": "wrangler d1 execute quiz-game-db --remote --file=./seed.sql"
+  },
+  "keywords": [
+    "cloudflare",
+    "workers",
+    "d1",
+    "quiz"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "wrangler": "^4.45.3"
+  }
+}
