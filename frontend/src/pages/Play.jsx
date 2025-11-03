@@ -412,7 +412,7 @@ export default function Play() {
 
         <Card className="result-card">
           <Result
-            status={false}
+            status={passed ? 'success' : 'warning'}
             title={
               <div className="result-title">
                 {passed ? (
