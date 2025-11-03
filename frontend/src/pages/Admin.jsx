@@ -437,7 +437,7 @@ export default function Admin() {
 
       {/* Question Modal */}
       <Modal
-        open={modalVisible}
+        open={questionModalVisible}
         title={editingQuestion ? '✏️ Sửa câu hỏi' : '➕ Thêm câu hỏi mới'}
         onCancel={() => {
           setQuestionModalVisible(false)
@@ -465,7 +465,7 @@ export default function Admin() {
         open={setModalVisible}
         title={editingSet ? '✏️ Sửa danh sách' : '➕ Tạo danh sách mới'}
         onCancel={() => {
-          setsetQuestionModalVisible(false)
+          setSetModalVisible(false)
           setEditingSet(null)
         }}
         footer={null}
