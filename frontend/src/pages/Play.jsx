@@ -81,7 +81,7 @@ export default function Play() {
         answerIndex: answers[question.id] !== undefined ? answers[question.id] : -1
       }))
 
-      const response = await gradeQuiz({ answers: answersArray })
+      const response = await gradeQuiz(answersArray)
       const { correct, total, score, details } = response.data
 
       // Backend already returns enriched details with all needed data
