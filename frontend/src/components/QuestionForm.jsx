@@ -15,13 +15,10 @@ export default function QuestionForm({ initialValues, onSubmit, onCancel }) {
   function handleSubmit() {
     form.validateFields()
       .then(values => {
-        // Transform to backend format
+        // Backend expects choices array format
         const backendFormat = {
           text: values.text,
-          choice1: values.choices[0],
-          choice2: values.choices[1],
-          choice3: values.choices[2],
-          choice4: values.choices[3],
+          choices: values.choices, // Keep as array
           correctIndex: values.correctIndex,
           explanation: values.explanation || ''
         }

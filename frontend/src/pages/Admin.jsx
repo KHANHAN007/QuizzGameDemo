@@ -136,6 +136,13 @@ export default function Admin() {
       setSetModalVisible(false)
       await loadQuestionSets()
       setSelectedSetId(response.data.id)
+      
+      // Auto switch to questions tab and open add question modal
+      setActiveTab('questions')
+      setTimeout(() => {
+        message.info('💡 Bây giờ bạn có thể thêm câu hỏi vào danh sách này!')
+        setQuestionModalVisible(true)
+      }, 500)
     } catch (error) {
       message.error('Không thể tạo danh sách')
     }
