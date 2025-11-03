@@ -401,6 +401,7 @@ body {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12) !important;
   padding: 32px !important;
   animation: slideInUp 0.5s;
+  min-height: 500px; /* Fixed height to prevent shrinking */
 }
 
 .question-number {

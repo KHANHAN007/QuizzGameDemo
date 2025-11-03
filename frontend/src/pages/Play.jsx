@@ -75,10 +75,10 @@ export default function Play() {
   async function submitQuiz() {
     try {
       // Transform answers object to array format for backend
-      // answers = {35: 1, 34: 0} → [{id: 35, answerIndex: 1}, {id: 34, answerIndex: 0}]
-      const answersArray = Object.entries(answers).map(([questionId, answerIndex]) => ({
-        id: parseInt(questionId),
-        answerIndex: answerIndex
+      // Send -1 for unanswered questions
+      const answersArray = questions.map(question => ({
+        id: question.id,
+        answerIndex: answers[question.id] !== undefined ? answers[question.id] : -1
       }))
 
       const response = await gradeQuiz({ answers: answersArray })
@@ -350,6 +350,50 @@ export default function Play() {
             </div>
 
             <div style={{ width: 100 }} />
+          </div>
+
+          {/* Question Navigator */}
+          <div className="question-navigator" style={{ marginTop: 32, padding: '20px', background: '#f8f9fa', borderRadius: 12 }}>
+            <h4 style={{ marginBottom: 16, fontSize: 16, fontWeight: 600 }}>📋 Danh sách câu hỏi ({Object.keys(answers).length}/{questions.length})</h4>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(45px, 1fr))', gap: 8, marginBottom: 16 }}>
+              {questions.map((q, idx) => {
+                const isAnswered = answers[q.id] !== undefined
+                const isCurrent = idx === currentIndex
+                return (
+                  <button
+                    key={q.id}
+                    onClick={() => setCurrentIndex(idx)}
+                    style={{
+                      padding: '10px',
+                      border: '2px solid',
+                      borderColor: isCurrent ? '#ff6b9d' : (isAnswered ? '#52c41a' : '#d9d9d9'),
+                      background: isCurrent ? '#ff6b9d' : (isAnswered ? '#f6ffed' : 'white'),
+                      color: isCurrent ? 'white' : (isAnswered ? '#52c41a' : '#666'),
+                      borderRadius: 8,
+                      cursor: 'pointer',
+                      fontWeight: isCurrent ? 'bold' : 'normal',
+                      fontSize: 14,
+                      transition: 'all 0.3s'
+                    }}
+                    onMouseEnter={e => {
+                      if (!isCurrent) {
+                        e.target.style.transform = 'scale(1.1)'
+                      }
+                    }}
+                    onMouseLeave={e => {
+                      e.target.style.transform = 'scale(1)'
+                    }}
+                  >
+                    {idx + 1}
+                  </button>
+                )
+              })}
+            </div>
+            <div style={{ display: 'flex', gap: 16, fontSize: 12, color: '#666' }}>
+              <span><span style={{ display: 'inline-block', width: 12, height: 12, background: '#52c41a', borderRadius: 2, marginRight: 6 }}></span>Đã trả lời</span>
+              <span><span style={{ display: 'inline-block', width: 12, height: 12, background: '#d9d9d9', borderRadius: 2, marginRight: 6 }}></span>Chưa trả lời</span>
+              <span><span style={{ display: 'inline-block', width: 12, height: 12, background: '#ff6b9d', borderRadius: 2, marginRight: 6 }}></span>Đang xem</span>
+            </div>
           </div>
         </Card>
       </div>
