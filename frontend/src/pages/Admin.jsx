@@ -29,6 +29,7 @@ export default function Admin() {
   const [questionSets, setQuestionSets] = useState([])
   const [allQuestions, setAllQuestions] = useState([]) // For counting
   const [selectedSetId, setSelectedSetId] = useState(null)
+  const [activeTab, setActiveTab] = useState('questions')
   const [loading, setLoading] = useState(false)
   const [questionModalVisible, setQuestionModalVisible] = useState(false)
   const [setModalVisible, setSetModalVisible] = useState(false)
@@ -45,6 +46,15 @@ export default function Admin() {
       loadQuestions(selectedSetId)
     }
   }, [selectedSetId])
+
+  useEffect(() => {
+    // Listen for custom event to switch tab
+    const handleSwitchTab = (e) => {
+      setActiveTab(e.detail)
+    }
+    window.addEventListener('switchTab', handleSwitchTab)
+    return () => window.removeEventListener('switchTab', handleSwitchTab)
+  }, [])
 
   async function loadAllQuestions() {
     try {
@@ -214,44 +224,76 @@ export default function Admin() {
       dataIndex: 'id',
       key: 'id',
       width: 60,
+      align: 'center',
       render: (id) => <Tag color="blue">#{id}</Tag>
     },
     {
       title: 'Câu hỏi',
       dataIndex: 'text',
       key: 'text',
-      ellipsis: true
+      width: '30%',
+      ellipsis: true,
+      render: (text) => <strong>{text}</strong>
     },
     {
-      title: 'Lựa chọn',
-      dataIndex: 'choices',
+      title: 'Lựa chọn & Đáp án',
       key: 'choices',
-      render: (choices, record) => (
-        <div className="choices-preview">
-          {choices.map((choice, idx) => (
-            <Tag 
-              key={idx} 
-              color={idx === record.correctIndex ? 'green' : 'default'}
-              style={{ marginBottom: 4 }}
-            >
-              {idx === record.correctIndex && '✓ '}
-              {choice}
-            </Tag>
+      render: (_, record) => (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          {record.choices && record.choices.map((choice, idx) => (
+            <div key={idx} style={{ display: 'flex', alignItems: 'center' }}>
+              <Tag 
+                color={idx === record.correctIndex ? 'green' : 'default'}
+                style={{ 
+                  minWidth: 30, 
+                  textAlign: 'center',
+                  fontWeight: idx === record.correctIndex ? 'bold' : 'normal'
+                }}
+              >
+                {String.fromCharCode(65 + idx)}
+              </Tag>
+              <span style={{ 
+                marginLeft: 8,
+                color: idx === record.correctIndex ? '#52c41a' : '#000',
+                fontWeight: idx === record.correctIndex ? 'bold' : 'normal'
+              }}>
+                {idx === record.correctIndex && '✓ '}
+                {choice}
+              </span>
+            </div>
           ))}
+        </div>
+      )
+    },
+    {
+      title: 'Giải thích',
+      dataIndex: 'explanation',
+      key: 'explanation',
+      width: '20%',
+      ellipsis: true,
+      render: (text) => text ? (
+        <div style={{ fontSize: 12, color: '#666' }}>
+          💡 {text}
+        </div>
+      ) : (
+        <div style={{ fontSize: 12, color: '#ccc', fontStyle: 'italic' }}>
+          Chưa có giải thích
         </div>
       )
     },
     {
       title: 'Hành động',
       key: 'actions',
-      width: 150,
+      width: 120,
+      align: 'center',
       render: (_, record) => (
-        <Space>
+        <Space direction="vertical" size="small">
           <Button
             type="primary"
             icon={<EditOutlined />}
             size="small"
             onClick={() => openEditModal(record)}
+            block
           >
             Sửa
           </Button>
@@ -267,6 +309,7 @@ export default function Admin() {
               danger
               icon={<DeleteOutlined />}
               size="small"
+              block
             >
               Xóa
             </Button>
@@ -278,70 +321,112 @@ export default function Admin() {
 
   const setColumns = [
     {
-      title: 'Tên danh sách',
+      title: 'Danh sách',
       dataIndex: 'name',
       key: 'name',
+      width: '25%',
       render: (name, record) => (
-        <Space>
-          <FolderOutlined />
-          <strong>{name}</strong>
-          <Tag color="blue">{allQuestions.filter(q => q.setId === record.id).length} câu</Tag>
-        </Space>
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', marginBottom: 4 }}>
+            <FolderOutlined style={{ fontSize: 16, marginRight: 8, color: '#1890ff' }} />
+            <strong style={{ fontSize: 16 }}>{name}</strong>
+          </div>
+          <div style={{ fontSize: 12, color: '#666', marginLeft: 24 }}>
+            {record.description || 'Chưa có mô tả'}
+          </div>
+        </div>
       )
     },
     {
-      title: 'Mô tả',
-      dataIndex: 'description',
-      key: 'description',
-      ellipsis: true
+      title: 'Số câu hỏi',
+      key: 'questionCount',
+      width: 100,
+      align: 'center',
+      render: (_, record) => (
+        <Tag color="blue" style={{ fontSize: 14, padding: '4px 12px' }}>
+          {allQuestions.filter(q => q.setId === record.id).length} câu
+        </Tag>
+      )
     },
     {
-      title: 'Cấu hình',
+      title: 'Cấu hình chơi',
       key: 'settings',
+      width: '35%',
       render: (_, record) => (
-        <Space wrap>
-          {record.showInstantFeedback ? <Tag color="green">Phản hồi tức thì</Tag> : null}
-          {record.presentationMode ? <Tag color="purple">Trình chiếu</Tag> : null}
-          {record.shuffleQuestions ? <Tag>Xáo câu hỏi</Tag> : null}
+        <Space wrap size="small">
+          {record.showInstantFeedback ? (
+            <Tag color="green">✓ Phản hồi tức thì</Tag>
+          ) : (
+            <Tag color="default">✗ Phản hồi tức thì</Tag>
+          )}
+          {record.presentationMode ? (
+            <Tag color="purple">✓ Trình chiếu</Tag>
+          ) : (
+            <Tag color="default">✗ Trình chiếu</Tag>
+          )}
+          {record.timePerQuestion > 0 ? (
+            <Tag color="orange">⏱ {record.timePerQuestion}s/câu</Tag>
+          ) : (
+            <Tag color="default">⏱ Không giới hạn</Tag>
+          )}
+          {record.shuffleQuestions ? (
+            <Tag color="blue">🔀 Xáo câu hỏi</Tag>
+          ) : null}
+          {record.shuffleChoices ? (
+            <Tag color="cyan">🔄 Xáo đáp án</Tag>
+          ) : null}
         </Space>
       )
     },
     {
       title: 'Hành động',
       key: 'actions',
-      width: 200,
+      width: 160,
+      align: 'center',
       render: (_, record) => (
-        <Space>
+        <Space direction="vertical" size="small" style={{ width: '100%' }}>
           <Button
+            type="default"
             size="small"
-            onClick={() => setSelectedSetId(record.id)}
+            onClick={() => {
+              setSelectedSetId(record.id)
+              // Switch to questions tab
+              const event = new CustomEvent('switchTab', { detail: 'questions' })
+              window.dispatchEvent(event)
+            }}
+            block
+            icon={<QuestionCircleOutlined />}
           >
             Xem câu hỏi
           </Button>
-          <Button
-            type="primary"
-            icon={<EditOutlined />}
-            size="small"
-            onClick={() => openEditSetModal(record)}
-          >
-            Sửa
-          </Button>
-          <Popconfirm
-            title="Xác nhận xóa?"
-            description="Xóa danh sách sẽ xóa toàn bộ câu hỏi bên trong!"
-            onConfirm={() => handleDeleteSet(record.id)}
-            okText="Xóa"
-            cancelText="Hủy"
-            icon={<QuestionCircleOutlined style={{ color: 'red' }} />}
-          >
+          <Space size="small" style={{ width: '100%' }}>
             <Button
-              danger
-              icon={<DeleteOutlined />}
+              type="primary"
+              icon={<EditOutlined />}
               size="small"
+              onClick={() => openEditSetModal(record)}
+              style={{ flex: 1 }}
             >
-              Xóa
+              Sửa
             </Button>
-          </Popconfirm>
+            <Popconfirm
+              title="Xác nhận xóa?"
+              description="Xóa danh sách sẽ xóa toàn bộ câu hỏi bên trong!"
+              onConfirm={() => handleDeleteSet(record.id)}
+              okText="Xóa"
+              cancelText="Hủy"
+              icon={<QuestionCircleOutlined style={{ color: 'red' }} />}
+            >
+              <Button
+                danger
+                icon={<DeleteOutlined />}
+                size="small"
+                style={{ flex: 1 }}
+              >
+                Xóa
+              </Button>
+            </Popconfirm>
+          </Space>
         </Space>
       )
     }
@@ -352,56 +437,94 @@ export default function Admin() {
   const tabItems = [
     {
       key: 'questions',
-      label: `📝 Câu hỏi${currentSet ? ` - ${currentSet.name}` : ''}`,
+      label: '📝 Quản lý câu hỏi',
       children: (
         <div>
-          <div className="admin-header">
-            <h2>Quản lý câu hỏi</h2>
-            <Space>
-              <Upload
-                accept=".csv"
-                beforeUpload={handleImport}
-                showUploadList={false}
-                disabled={!selectedSetId}
-              >
-                <Button icon={<UploadOutlined />} disabled={!selectedSetId}>
-                  Nhập CSV
+          <Card style={{ marginBottom: 16 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ marginBottom: 8 }}>
+                  <strong>Chọn danh sách câu hỏi:</strong>
+                </div>
+                <Select
+                  style={{ width: '100%', maxWidth: 400 }}
+                  placeholder="Chọn danh sách để quản lý câu hỏi"
+                  value={selectedSetId}
+                  onChange={setSelectedSetId}
+                  size="large"
+                >
+                  {questionSets.map(set => (
+                    <Select.Option key={set.id} value={set.id}>
+                      <Space>
+                        <FolderOutlined />
+                        <span>{set.name}</span>
+                        <Tag color="blue">{allQuestions.filter(q => q.setId === set.id).length} câu</Tag>
+                      </Space>
+                    </Select.Option>
+                  ))}
+                </Select>
+              </div>
+              
+              <Space>
+                <Upload
+                  accept=".csv"
+                  beforeUpload={handleImport}
+                  showUploadList={false}
+                  disabled={!selectedSetId}
+                >
+                  <Button icon={<UploadOutlined />} disabled={!selectedSetId}>
+                    Nhập CSV
+                  </Button>
+                </Upload>
+                
+                <Button
+                  icon={<DownloadOutlined />}
+                  onClick={handleExport}
+                  disabled={!selectedSetId}
+                >
+                  Xuất CSV
                 </Button>
-              </Upload>
-              
-              <Button
-                icon={<DownloadOutlined />}
-                onClick={handleExport}
-                disabled={!selectedSetId}
-              >
-                Xuất CSV
-              </Button>
-              
-              <Button
-                type="primary"
-                icon={<PlusOutlined />}
-                onClick={openCreateModal}
-                size="large"
-                disabled={!selectedSetId}
-              >
-                Thêm câu hỏi
-              </Button>
-            </Space>
-          </div>
+                
+                <Button
+                  type="primary"
+                  icon={<PlusOutlined />}
+                  onClick={openCreateModal}
+                  size="large"
+                  disabled={!selectedSetId}
+                >
+                  Thêm câu hỏi
+                </Button>
+              </Space>
+            </div>
+          </Card>
 
           {currentSet && (
             <Card style={{ marginBottom: 16, background: '#f0f5ff' }}>
-              <Space size="large">
-                <Statistic title="Tổng câu hỏi" value={questions.length} prefix={<QuestionCircleOutlined />} />
-                <Statistic title="Thời gian/câu" value={currentSet.timePerQuestion} suffix="giây" />
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Space size="large">
+                  <Statistic 
+                    title="Tổng câu hỏi" 
+                    value={questions.length} 
+                    prefix={<QuestionCircleOutlined />} 
+                  />
+                  <Statistic 
+                    title="Thời gian/câu" 
+                    value={currentSet.timePerQuestion || 'Không giới hạn'} 
+                    suffix={currentSet.timePerQuestion ? "giây" : ''} 
+                  />
+                </Space>
                 <div>
-                  <div style={{ fontSize: 12, color: '#666' }}>Chế độ</div>
-                  <Space>
-                    {currentSet.showInstantFeedback && <Tag color="green">Phản hồi tức thì</Tag>}
-                    {currentSet.presentationMode && <Tag color="purple">Trình chiếu</Tag>}
+                  <div style={{ fontSize: 12, color: '#666', marginBottom: 8 }}>Cấu hình chế độ chơi:</div>
+                  <Space wrap>
+                    {currentSet.showInstantFeedback ? <Tag color="green">✓ Phản hồi tức thì</Tag> : <Tag>✗ Phản hồi tức thì</Tag>}
+                    {currentSet.presentationMode ? <Tag color="purple">✓ Chế độ trình chiếu</Tag> : <Tag>✗ Chế độ trình chiếu</Tag>}
+                    {currentSet.shuffleQuestions ? <Tag color="blue">✓ Xáo câu hỏi</Tag> : <Tag>✗ Xáo câu hỏi</Tag>}
+                    {currentSet.shuffleChoices ? <Tag color="cyan">✓ Xáo đáp án</Tag> : <Tag>✗ Xáo đáp án</Tag>}
+                    {currentSet.allowSkip ? <Tag color="orange">✓ Cho phép bỏ qua</Tag> : <Tag>✗ Cho phép bỏ qua</Tag>}
+                    {currentSet.showScore ? <Tag color="magenta">✓ Hiển thị điểm</Tag> : <Tag>✗ Hiển thị điểm</Tag>}
                   </Space>
                 </div>
-              </Space>
+              </div>
             </Card>
           )}
 
@@ -412,18 +535,27 @@ export default function Admin() {
             loading={loading}
             pagination={{ pageSize: 10 }}
             className="questions-table"
-            locale={{ emptyText: selectedSetId ? 'Chưa có câu hỏi. Hãy thêm câu hỏi mới!' : 'Vui lòng chọn danh sách' }}
+            locale={{ 
+              emptyText: selectedSetId 
+                ? '📭 Chưa có câu hỏi nào. Click "Thêm câu hỏi" để bắt đầu!' 
+                : '👆 Vui lòng chọn danh sách ở phía trên' 
+            }}
           />
         </div>
       )
     },
     {
       key: 'sets',
-      label: '📁 Danh sách câu hỏi',
+      label: '📁 Quản lý danh sách',
       children: (
         <div>
-          <div className="admin-header">
-            <h2>Quản lý danh sách</h2>
+          <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <h2 style={{ margin: 0 }}>Danh sách câu hỏi</h2>
+              <p style={{ color: '#666', margin: '8px 0 0 0' }}>
+                Quản lý các bộ câu hỏi và cấu hình chế độ chơi
+              </p>
+            </div>
             <Button
               type="primary"
               icon={<PlusOutlined />}
@@ -434,13 +566,15 @@ export default function Admin() {
             </Button>
           </div>
 
-          <Table
-            dataSource={questionSets}
-            columns={setColumns}
-            rowKey="id"
-            pagination={false}
-            className="questions-table"
-          />
+          <Card>
+            <Table
+              dataSource={questionSets}
+              columns={setColumns}
+              rowKey="id"
+              pagination={false}
+              className="sets-table"
+            />
+          </Card>
         </div>
       )
     }
@@ -449,10 +583,17 @@ export default function Admin() {
   return (
     <div className="admin-page">
       <div className="admin-header" style={{ marginBottom: 24 }}>
-        <h1>⚙️ Quản lý</h1>
+        <h1>⚙️ Quản lý câu hỏi</h1>
+        <p style={{ color: '#666', margin: '8px 0 0 0' }}>
+          Tạo và quản lý danh sách câu hỏi, cấu hình chế độ chơi cho từng bộ câu hỏi
+        </p>
       </div>
 
-      <Tabs items={tabItems} defaultActiveKey="questions" />
+      <Tabs 
+        items={tabItems} 
+        activeKey={activeTab}
+        onChange={setActiveTab}
+      />
 
       {/* Question Modal */}
       <Modal
