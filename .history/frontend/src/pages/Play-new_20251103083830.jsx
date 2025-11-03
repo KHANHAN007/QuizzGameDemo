@@ -17,7 +17,7 @@ const { Countdown } = Statistic
 
 export default function Play() {
   const navigate = useNavigate()
-  const [gameState, setGameState] = useState('select') // select, playing, result
+  const [game State, setGameState] = useState('select') // select, playing, result
   const [questionSets, setQuestionSets] = useState([])
   const [selectedSet, setSelectedSet] = useState(null)
   const [setSettings, setSetSettings] = useState(null)

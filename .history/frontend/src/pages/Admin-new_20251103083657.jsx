@@ -29,8 +29,8 @@ export default function Admin() {
   const [questionSets, setQuestionSets] = useState([])
   const [selectedSetId, setSelectedSetId] = useState(null)
   const [loading, setLoading] = useState(false)
-  const [questionquestionModalVisible, setQuestionModalVisible] = useState(false)
-  const [setquestionModalVisible, setSetModalVisible] = useState(false)
+  const [questionModalVisible, setQuestionModalVisible] = useState(false)
+  const [setModalVisible, setSetModalVisible] = useState(false)
   const [editingQuestion, setEditingQuestion] = useState(null)
   const [editingSet, setEditingSet] = useState(null)
 
@@ -72,7 +72,7 @@ export default function Admin() {
     try {
       await createQuestion({ ...values, setId: selectedSetId })
       message.success('✅ Đã thêm câu hỏi mới!')
-      setQuestionModalVisible(false)
+      setModalVisible(false)
       loadQuestions(selectedSetId)
     } catch (error) {
       message.error('Không thể tạo câu hỏi')
@@ -83,7 +83,7 @@ export default function Admin() {
     try {
       await updateQuestion(id, { ...values, setId: selectedSetId })
       message.success('✅ Đã cập nhật câu hỏi!')
-      setQuestionModalVisible(false)
+      setModalVisible(false)
       setEditingQuestion(null)
       loadQuestions(selectedSetId)
     } catch (error) {
@@ -105,7 +105,7 @@ export default function Admin() {
     try {
       const response = await createQuestionSet(values)
       message.success('✅ Đã tạo danh sách mới!')
-      setsetQuestionModalVisible(false)
+      setSetModalVisible(false)
       await loadQuestionSets()
       setSelectedSetId(response.data.id)
     } catch (error) {
@@ -117,7 +117,7 @@ export default function Admin() {
     try {
       await updateQuestionSet(editingSet.id, values)
       message.success('✅ Đã cập nhật danh sách!')
-      setsetQuestionModalVisible(false)
+      setSetModalVisible(false)
       setEditingSet(null)
       loadQuestionSets()
     } catch (error) {
@@ -171,22 +171,22 @@ export default function Admin() {
 
   function openEditModal(question) {
     setEditingQuestion(question)
-    setQuestionModalVisible(true)
+    setModalVisible(true)
   }
 
   function openCreateModal() {
     setEditingQuestion(null)
-    setQuestionModalVisible(true)
+    setModalVisible(true)
   }
 
   function openEditSetModal(set) {
     setEditingSet(set)
-    setsetQuestionModalVisible(true)
+    setSetModalVisible(true)
   }
 
   function openCreateSetModal() {
     setEditingSet(null)
-    setsetQuestionModalVisible(true)
+    setSetModalVisible(true)
   }
 
   const questionColumns = [
@@ -440,7 +440,7 @@ export default function Admin() {
         open={modalVisible}
         title={editingQuestion ? '✏️ Sửa câu hỏi' : '➕ Thêm câu hỏi mới'}
         onCancel={() => {
-          setQuestionModalVisible(false)
+          setModalVisible(false)
           setEditingQuestion(null)
         }}
         footer={null}
@@ -454,7 +454,7 @@ export default function Admin() {
             : handleCreateQuestion
           }
           onCancel={() => {
-            setQuestionModalVisible(false)
+            setModalVisible(false)
             setEditingQuestion(null)
           }}
         />
@@ -465,7 +465,7 @@ export default function Admin() {
         open={setModalVisible}
         title={editingSet ? '✏️ Sửa danh sách' : '➕ Tạo danh sách mới'}
         onCancel={() => {
-          setsetQuestionModalVisible(false)
+          setSetModalVisible(false)
           setEditingSet(null)
         }}
         footer={null}
@@ -479,7 +479,7 @@ export default function Admin() {
             : handleCreateSet
           }
           onCancel={() => {
-            setsetQuestionModalVisible(false)
+            setSetModalVisible(false)
             setEditingSet(null)
           }}
         />
