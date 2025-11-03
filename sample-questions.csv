@@ -1,9 +1,42 @@
-question,choice1,choice2,choice3,choice4,correctIndex
-"2 + 2 = ?","3","4","5","6",1
-"Con mèo kêu gì?","Gâu gâu","Meo meo","Ò ó o","Cục tác",1
-"Việt Nam có bao nhiêu tỉnh thành?","60","63","65","70",1
-"Thủ đô của Pháp là gì?","London","Berlin","Paris","Rome",2
-"Con nào sống ở nước?","Chó","Mèo","Cá","Gà",2
-"1 + 1 = ?","1","2","3","4",1
-"Màu của trời là gì?","Đỏ","Vàng","Xanh","Trắng",2
-"Con gì có vòi?","Sư tử","Voi","Hổ","Báo",1
+question,choice1,choice2,choice3,choice4,correctIndex,explanation
+"2 + 2 = ?","3","4","5","6",1,"Vì 2 cộng 2 bằng 4"
+"3 + 5 = ?","6","7","8","9",2,"Vì 3 cộng 5 bằng 8"
+"10 - 4 = ?","5","6","7","8",1,"Vì 10 trừ 4 bằng 6"
+"5 x 2 = ?","8","10","12","15",1,"Vì 5 nhân 2 bằng 10"
+"20 : 4 = ?","4","5","6","10",1,"Vì 20 chia 4 bằng 5"
+"7 + 8 = ?","13","14","15","16",2,"Vì 7 cộng 8 bằng 15"
+"12 - 5 = ?","6","7","8","9",1,"Vì 12 trừ 5 bằng 7"
+"3 x 4 = ?","10","11","12","13",2,"Vì 3 nhân 4 bằng 12"
+"18 : 3 = ?","5","6","7","8",1,"Vì 18 chia 3 bằng 6"
+"9 + 6 = ?","13","14","15","16",2,"Vì 9 cộng 6 bằng 15"
+"Con mèo kêu gì?","Gâu gâu","Meo meo","Ò ó o","Cục tác",1,"Mèo kêu meo meo"
+"Con chó kêu gì?","Gâu gâu","Meo meo","Ò ó o","Cục tác",0,"Chó kêu gâu gâu"
+"Con gà kêu gì?","Gâu gâu","Meo meo","Ò ó o","Cục tác",2,"Gà kêu ò ó o"
+"Con vịt kêu gì?","Gâu gâu","Cạp cạp","Ò ó o","Quạc quạc",3,"Vịt kêu quạc quạc"
+"Con nào sống ở nước?","Chó","Mèo","Cá","Gà",2,"Cá sống ở nước"
+"Con nào biết bay?","Cá","Chim","Chó","Mèo",1,"Chim biết bay"
+"Con gì có vòi?","Sư tử","Voi","Hổ","Báo",1,"Voi có vòi dài"
+"Con nào có vảy?","Chó","Mèo","Cá","Gà",2,"Cá có vảy"
+"Con gì có lông vũ?","Cá","Chó","Chim","Mèo",2,"Chim có lông vũ"
+"Con nào chạy nhanh nhất?","Rùa","Ốc sên","Báo","Bướm",2,"Báo chạy rất nhanh"
+"Việt Nam có bao nhiêu tỉnh thành?","60","63","65","70",1,"Việt Nam có 63 tỉnh thành"
+"Thủ đô của Việt Nam là gì?","Hà Nội","TP HCM","Đà Nẵng","Huế",0,"Thủ đô Việt Nam là Hà Nội"
+"Thành phố lớn nhất Việt Nam?","Hà Nội","TP HCM","Đà Nẵng","Cần Thơ",1,"TP HCM là thành phố lớn nhất"
+"Núi cao nhất Việt Nam?","Phan Xi Păng","Bạch Mã","Ngũ Hành Sơn","Hòn Bà",0,"Phan Xi Păng cao nhất Việt Nam"
+"Sông dài nhất Việt Nam?","Sông Hồng","Sông Đồng Nai","Sông Mê Kông","Sông Hương",2,"Sông Mê Kông dài nhất"
+"Thủ đô của Pháp là gì?","London","Berlin","Paris","Rome",2,"Thủ đô Pháp là Paris"
+"Thủ đô của Nhật Bản?","Seoul","Tokyo","Beijing","Bangkok",1,"Thủ đô Nhật là Tokyo"
+"Thủ đô của Mỹ?","New York","Los Angeles","Washington D.C.","Chicago",2,"Thủ đô Mỹ là Washington D.C."
+"Thủ đô của Thái Lan?","Manila","Bangkok","Jakarta","Kuala Lumpur",1,"Thủ đô Thái Lan là Bangkok"
+"Đất nước nào có tháp Eiffel?","Anh","Pháp","Đức","Ý",1,"Tháp Eiffel ở Pháp"
+"1 + 1 = ?","1","2","3","4",1,"Vì 1 cộng 1 bằng 2"
+"Màu của trời là gì?","Đỏ","Vàng","Xanh","Trắng",2,"Bầu trời có màu xanh"
+"Màu của lá cây?","Đỏ","Xanh","Vàng","Trắng",1,"Lá cây có màu xanh"
+"Màu của mặt trời?","Xanh","Vàng","Đỏ","Trắng",1,"Mặt trời có màu vàng"
+"Mặt trời mọc hướng nào?","Tây","Đông","Nam","Bắc",1,"Mặt trời mọc hướng Đông"
+"Một năm có bao nhiêu tháng?","10","11","12","13",2,"Một năm có 12 tháng"
+"Một tuần có bao nhiêu ngày?","5","6","7","8",2,"Một tuần có 7 ngày"
+"Một ngày có bao nhiêu giờ?","12","20","24","30",2,"Một ngày có 24 giờ"
+"Một giờ có bao nhiêu phút?","30","60","90","100",1,"Một giờ có 60 phút"
+"Quả gì có màu đỏ?","Chuối","Táo","Xoài","Bưởi",1,"Táo có màu đỏ"
+"Quả gì có màu vàng?","Táo","Chuối","Nho","Dâu",1,"Chuối có màu vàng"
