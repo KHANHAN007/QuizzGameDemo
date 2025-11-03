@@ -52,7 +52,7 @@ export default function Play() {
       const response = await fetchQuiz(selectedSet)
       // Backend already returns choices array
       setQuestions(response.data.questions)
-      setSetSettings(response.data.settings)
+      setSetSettings(response.data.setSettings) // Fixed: API returns 'setSettings' not 'settings'
       setAnswers({})
       setInstantFeedback({})
       setCurrentIndex(0)
@@ -60,8 +60,8 @@ export default function Play() {
       setGameState('playing')
 
       // Set deadline if timePerQuestion > 0
-      if (response.data.settings?.timePerQuestion > 0) {
-        const totalTime = response.data.settings.timePerQuestion * response.data.questions.length
+      if (response.data.setSettings?.timePerQuestion > 0) {
+        const totalTime = response.data.setSettings.timePerQuestion * response.data.questions.length
         setDeadline(Date.now() + totalTime * 1000)
       } else {
         setDeadline(null)
