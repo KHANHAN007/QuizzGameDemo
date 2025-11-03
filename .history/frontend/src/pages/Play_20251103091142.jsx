@@ -78,49 +78,23 @@ export default function Play() {
   }
 
   async function submitQuiz() {
+    const answerList = questions.map(q => ({
+      id: q.id,
+      answerIndex: answers[q.id] ?? -1
+    }))
+
     try {
-      const response = await gradeQuiz({ answers })
-      const { correct, incorrect, total, details } = response.data
-      
-      // Transform details to include question text and answers
-      const enrichedDetails = details.map(detail => {
-        const question = questions.find(q => q.id === detail.questionId)
-        const yourAnswerIndex = answers[detail.questionId]
-        const yourAnswer = yourAnswerIndex !== undefined && yourAnswerIndex !== null 
-          ? question?.choices[yourAnswerIndex] 
-          : 'Chưa trả lời'
-        const correctAnswer = question?.choices[question.correctIndex]
-        
-        return {
-          ...detail,
-          id: detail.questionId,
-          isCorrect: detail.correct,
-          questionText: question?.text || '',
-          yourAnswer,
-          correctAnswer,
-          explanation: question?.explanation || ''
-        }
-      })
-      
-      const score = Math.round((correct / total) * 100)
-      
-      setResult({
-        total,
-        correct,
-        incorrect,
-        score,
-        details: enrichedDetails
-      })
+      const response = await gradeQuiz(answerList)
+      setResult(response.data)
       setGameState('result')
       
       // Show confetti if score >= 80%
-      if (score >= 80) {
+      if (response.data.score >= 80) {
         setShowConfetti(true)
         setTimeout(() => setShowConfetti(false), 5000)
       }
     } catch (error) {
       message.error('Không thể chấm điểm')
-      console.error(error)
     }
   }
 
@@ -199,6 +173,7 @@ export default function Play() {
                 <Select.Option key={set.id} value={set.id}>
                   <Space>
                     <span style={{ fontWeight: 600 }}>{set.name}</span>
+                    <span style={{ color: '#999' }}>({set.questionCount} câu)</span>
                   </Space>
                 </Select.Option>
               ))}

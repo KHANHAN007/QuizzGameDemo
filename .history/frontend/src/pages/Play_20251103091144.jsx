@@ -199,6 +199,7 @@ export default function Play() {
                 <Select.Option key={set.id} value={set.id}>
                   <Space>
                     <span style={{ fontWeight: 600 }}>{set.name}</span>
+                    <span style={{ color: '#999' }}>({set.questionCount} câu)</span>
                   </Space>
                 </Select.Option>
               ))}
