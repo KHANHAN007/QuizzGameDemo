@@ -1,27 +1,29 @@
 import React, { useEffect, useState } from 'react'
-import { Tabs, Button, Table, Modal, message, Space, Popconfirm, Upload, Tag, Card, Statistic, Select } from 'antd'
-import { 
-  PlusOutlined, 
-  EditOutlined, 
-  DeleteOutlined, 
-  DownloadOutlined, 
+import { Tabs, Button, Table, Modal, message, Space, Popconfirm, Upload, Tag, Card, Statistic, Select, Input } from 'antd'
+import {
+  PlusOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  DownloadOutlined,
   UploadOutlined,
   QuestionCircleOutlined,
-  FolderOutlined 
+  FolderOutlined,
+  SearchOutlined,
+  CheckCircleFilled
 } from '@ant-design/icons'
 import QuestionForm from '../components/QuestionForm'
 import QuestionSetForm from '../components/QuestionSetForm'
-import { 
+import {
   fetchQuestions,
   fetchQuestionSets,
-  createQuestion, 
-  updateQuestion, 
+  createQuestion,
+  updateQuestion,
   deleteQuestion,
   createQuestionSet,
   updateQuestionSet,
   deleteQuestionSet,
   importCSV,
-  exportCSV 
+  exportCSV
 } from '../api'
 
 export default function Admin() {
@@ -29,6 +31,7 @@ export default function Admin() {
   const [questionSets, setQuestionSets] = useState([])
   const [allQuestions, setAllQuestions] = useState([]) // For counting
   const [selectedSetId, setSelectedSetId] = useState(null)
+  const [searchText, setSearchText] = useState('') // Search filter
   const [activeTab, setActiveTab] = useState('questions')
   const [loading, setLoading] = useState(false)
   const [questionModalVisible, setQuestionModalVisible] = useState(false)
@@ -81,12 +84,8 @@ export default function Admin() {
     setLoading(true)
     try {
       const response = await fetchQuestions(setId)
-      // Transform backend data to frontend format
-      const transformedQuestions = response.data.map(q => ({
-        ...q,
-        choices: [q.choice1, q.choice2, q.choice3, q.choice4]
-      }))
-      setQuestions(transformedQuestions)
+      // Backend already returns choices array and correctIndex
+      setQuestions(response.data)
     } catch (error) {
       message.error('Không thể tải câu hỏi')
     } finally {
@@ -186,7 +185,7 @@ export default function Admin() {
     const formData = new FormData()
     formData.append('file', file)
     formData.append('setId', selectedSetId)
-    
+
     try {
       const response = await importCSV(formData)
       message.success(`📤 Đã nhập ${response.data.imported} câu hỏi!`)
@@ -194,7 +193,7 @@ export default function Admin() {
     } catch (error) {
       message.error('Không thể nhập file CSV')
     }
-    
+
     return false
   }
 
@@ -239,29 +238,45 @@ export default function Admin() {
       title: 'Lựa chọn & Đáp án',
       key: 'choices',
       render: (_, record) => (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          {record.choices && record.choices.map((choice, idx) => (
-            <div key={idx} style={{ display: 'flex', alignItems: 'center' }}>
-              <Tag 
-                color={idx === record.correctIndex ? 'green' : 'default'}
-                style={{ 
-                  minWidth: 30, 
-                  textAlign: 'center',
-                  fontWeight: idx === record.correctIndex ? 'bold' : 'normal'
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {record.choices && record.choices.map((choice, idx) => {
+            const isCorrect = idx === record.correctIndex
+            return (
+              <div
+                key={idx}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  padding: '4px 8px',
+                  backgroundColor: isCorrect ? '#f6ffed' : 'transparent',
+                  borderRadius: 4,
+                  border: isCorrect ? '1px solid #b7eb8f' : '1px solid transparent'
                 }}
               >
-                {String.fromCharCode(65 + idx)}
-              </Tag>
-              <span style={{ 
-                marginLeft: 8,
-                color: idx === record.correctIndex ? '#52c41a' : '#000',
-                fontWeight: idx === record.correctIndex ? 'bold' : 'normal'
-              }}>
-                {idx === record.correctIndex && ''}
-                {choice}
-              </span>
-            </div>
-          ))}
+                <Tag
+                  color={isCorrect ? 'green' : 'default'}
+                  style={{
+                    minWidth: 30,
+                    textAlign: 'center',
+                    fontWeight: isCorrect ? 'bold' : 'normal'
+                  }}
+                >
+                  {String.fromCharCode(65 + idx)}
+                </Tag>
+                <span style={{
+                  marginLeft: 8,
+                  flex: 1,
+                  color: isCorrect ? '#52c41a' : '#000',
+                  fontWeight: isCorrect ? '600' : 'normal'
+                }}>
+                  {choice}
+                </span>
+                {isCorrect && (
+                  <CheckCircleFilled style={{ color: '#52c41a', fontSize: 16, marginLeft: 8 }} />
+                )}
+              </div>
+            )
+          })}
         </div>
       )
     },
@@ -434,6 +449,17 @@ export default function Admin() {
 
   const currentSet = questionSets.find(s => s.id === selectedSetId)
 
+  // Filter questions based on search
+  const filteredQuestions = questions.filter(q => {
+    if (!searchText) return true
+    const searchLower = searchText.toLowerCase()
+    return (
+      q.text?.toLowerCase().includes(searchLower) ||
+      q.choices?.some(c => c?.toLowerCase().includes(searchLower)) ||
+      q.explanation?.toLowerCase().includes(searchLower)
+    )
+  })
+
   const tabItems = [
     {
       key: 'questions',
@@ -464,7 +490,7 @@ export default function Admin() {
                   ))}
                 </Select>
               </div>
-              
+
               <Space>
                 <Upload
                   accept=".csv"
@@ -476,7 +502,7 @@ export default function Admin() {
                     Nhập CSV
                   </Button>
                 </Upload>
-                
+
                 <Button
                   icon={<DownloadOutlined />}
                   onClick={handleExport}
@@ -484,7 +510,7 @@ export default function Admin() {
                 >
                   Xuất CSV
                 </Button>
-                
+
                 <Button
                   type="primary"
                   icon={<PlusOutlined />}
@@ -502,15 +528,15 @@ export default function Admin() {
             <Card style={{ marginBottom: 16, background: '#f0f5ff' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Space size="large">
-                  <Statistic 
-                    title="Tổng câu hỏi" 
-                    value={questions.length} 
-                    prefix={<QuestionCircleOutlined />} 
+                  <Statistic
+                    title="Tổng câu hỏi"
+                    value={questions.length}
+                    prefix={<QuestionCircleOutlined />}
                   />
-                  <Statistic 
-                    title="Thời gian/câu" 
-                    value={currentSet.timePerQuestion || 'Không giới hạn'} 
-                    suffix={currentSet.timePerQuestion ? "giây" : ''} 
+                  <Statistic
+                    title="Thời gian/câu"
+                    value={currentSet.timePerQuestion || 'Không giới hạn'}
+                    suffix={currentSet.timePerQuestion ? "giây" : ''}
                   />
                 </Space>
                 <div>
@@ -528,17 +554,38 @@ export default function Admin() {
             </Card>
           )}
 
+          <Card style={{ marginBottom: 16 }}>
+            <Space style={{ width: '100%', justifyContent: 'space-between' }}>
+              <Input
+                placeholder="🔍 Tìm kiếm câu hỏi, đáp án, giải thích..."
+                prefix={<SearchOutlined />}
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                allowClear
+                style={{ width: 400 }}
+                size="large"
+              />
+              <div style={{ color: '#666', fontSize: 14 }}>
+                {searchText && (
+                  <span>
+                    Tìm thấy <strong>{filteredQuestions.length}</strong> / {questions.length} câu hỏi
+                  </span>
+                )}
+              </div>
+            </Space>
+          </Card>
+
           <Table
-            dataSource={questions}
+            dataSource={filteredQuestions}
             columns={questionColumns}
             rowKey="id"
             loading={loading}
             pagination={{ pageSize: 10 }}
             className="questions-table"
-            locale={{ 
-              emptyText: selectedSetId 
-                ? '📭 Chưa có câu hỏi nào. Click "Thêm câu hỏi" để bắt đầu!' 
-                : '👆 Vui lòng chọn danh sách ở phía trên' 
+            locale={{
+              emptyText: selectedSetId
+                ? '📭 Chưa có câu hỏi nào. Click "Thêm câu hỏi" để bắt đầu!'
+                : '👆 Vui lòng chọn danh sách ở phía trên'
             }}
           />
         </div>
@@ -589,8 +636,8 @@ export default function Admin() {
         </p>
       </div>
 
-      <Tabs 
-        items={tabItems} 
+      <Tabs
+        items={tabItems}
         activeKey={activeTab}
         onChange={setActiveTab}
       />
@@ -609,7 +656,7 @@ export default function Admin() {
       >
         <QuestionForm
           initialValues={editingQuestion}
-          onSubmit={editingQuestion 
+          onSubmit={editingQuestion
             ? (values) => handleUpdateQuestion(editingQuestion.id, values)
             : handleCreateQuestion
           }
@@ -634,7 +681,7 @@ export default function Admin() {
       >
         <QuestionSetForm
           initialValues={editingSet}
-          onSubmit={editingSet 
+          onSubmit={editingSet
             ? handleUpdateSet
             : handleCreateSet
           }

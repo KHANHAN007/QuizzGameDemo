@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Card, Button, Radio, Progress, Result, Space, Select, Statistic, Alert, message } from 'antd'
-import { 
-  ClockCircleOutlined, 
-  TrophyOutlined, 
+import {
+  ClockCircleOutlined,
+  TrophyOutlined,
   RocketOutlined,
   HomeOutlined,
   ReloadOutlined,
   CheckCircleOutlined,
-  CloseCircleOutlined 
+  CloseCircleOutlined
 } from '@ant-design/icons'
 import Confetti from 'react-confetti'
 import { fetchQuiz, gradeQuiz, checkAnswer, fetchQuestionSets } from '../api'
@@ -50,23 +50,18 @@ export default function Play() {
 
     try {
       const response = await fetchQuiz(selectedSet)
-      // Transform backend format to frontend format
-      const transformedQuestions = response.data.questions.map(q => ({
-        ...q,
-        choices: [q.choice1, q.choice2, q.choice3, q.choice4]
-      }))
-      
-      setQuestions(transformedQuestions)
+      // Backend already returns choices array
+      setQuestions(response.data.questions)
       setSetSettings(response.data.settings)
       setAnswers({})
       setInstantFeedback({})
       setCurrentIndex(0)
       setResult(null)
       setGameState('playing')
-      
+
       // Set deadline if timePerQuestion > 0
       if (response.data.settings?.timePerQuestion > 0) {
-        const totalTime = response.data.settings.timePerQuestion * transformedQuestions.length
+        const totalTime = response.data.settings.timePerQuestion * response.data.questions.length
         setDeadline(Date.now() + totalTime * 1000)
       } else {
         setDeadline(null)
@@ -81,16 +76,16 @@ export default function Play() {
     try {
       const response = await gradeQuiz({ answers })
       const { correct, incorrect, total, details } = response.data
-      
+
       // Transform details to include question text and answers
       const enrichedDetails = details.map(detail => {
         const question = questions.find(q => q.id === detail.questionId)
         const yourAnswerIndex = answers[detail.questionId]
-        const yourAnswer = yourAnswerIndex !== undefined && yourAnswerIndex !== null 
-          ? question?.choices[yourAnswerIndex] 
+        const yourAnswer = yourAnswerIndex !== undefined && yourAnswerIndex !== null
+          ? question?.choices[yourAnswerIndex]
           : 'Chưa trả lời'
         const correctAnswer = question?.choices[question.correctIndex]
-        
+
         return {
           ...detail,
           id: detail.questionId,
@@ -101,9 +96,9 @@ export default function Play() {
           explanation: question?.explanation || ''
         }
       })
-      
+
       const score = Math.round((correct / total) * 100)
-      
+
       setResult({
         total,
         correct,
@@ -112,7 +107,7 @@ export default function Play() {
         details: enrichedDetails
       })
       setGameState('result')
-      
+
       // Show confetti if score >= 80%
       if (score >= 80) {
         setShowConfetti(true)
@@ -258,8 +253,8 @@ export default function Play() {
       <div className="play-page">
         <div className="play-header">
           <div className="play-progress">
-            <Progress 
-              percent={progress} 
+            <Progress
+              percent={progress}
               showInfo={false}
               strokeColor={{
                 '0%': '#ff6b9d',
@@ -275,7 +270,7 @@ export default function Play() {
               )}
             </div>
           </div>
-          
+
           {deadline && !isPresentationMode && (
             <div className="play-timer">
               <Countdown
@@ -314,7 +309,7 @@ export default function Play() {
                 const isSelected = answers[currentQuestion.id] === index
                 const isCorrect = currentFeedback && currentFeedback.correctIndex === index
                 const isWrong = currentFeedback && isSelected && !currentFeedback.isCorrect
-                
+
                 return (
                   <Radio
                     key={index}
@@ -378,7 +373,7 @@ export default function Play() {
     return (
       <div className="play-page">
         {showConfetti && <Confetti />}
-        
+
         <Card className="result-card">
           <Result
             status={passed ? 'success' : 'warning'}
@@ -416,8 +411,8 @@ export default function Play() {
           <div className="answer-review">
             <h3>📝 Chi tiết câu trả lời</h3>
             {details.map((detail, index) => (
-              <div 
-                key={detail.id} 
+              <div
+                key={detail.id}
                 className={`review-item ${detail.isCorrect ? 'correct' : 'incorrect'}`}
               >
                 <div className="review-header">
