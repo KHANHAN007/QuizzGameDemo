@@ -74,35 +74,27 @@ export default function Play() {
 
   async function submitQuiz() {
     try {
-      const response = await gradeQuiz({ answers })
-      const { correct, incorrect, total, details } = response.data
+      // Transform answers object to array format for backend
+      // answers = {35: 1, 34: 0} → [{id: 35, answerIndex: 1}, {id: 34, answerIndex: 0}]
+      const answersArray = Object.entries(answers).map(([questionId, answerIndex]) => ({
+        id: parseInt(questionId),
+        answerIndex: answerIndex
+      }))
 
-      // Transform details to include question text and answers
-      const enrichedDetails = details.map(detail => {
-        const question = questions.find(q => q.id === detail.questionId)
-        const yourAnswerIndex = answers[detail.questionId]
-        const yourAnswer = yourAnswerIndex !== undefined && yourAnswerIndex !== null
-          ? question?.choices[yourAnswerIndex]
-          : 'Chưa trả lời'
-        const correctAnswer = question?.choices[question.correctIndex]
+      const response = await gradeQuiz({ answers: answersArray })
+      const { correct, total, score, details } = response.data
 
-        return {
-          ...detail,
-          id: detail.questionId,
-          isCorrect: detail.correct,
-          questionText: question?.text || '',
-          yourAnswer,
-          correctAnswer,
-          explanation: question?.explanation || ''
-        }
-      })
-
-      const score = Math.round((correct / total) * 100)
+      // Backend already returns enriched details with all needed data
+      const enrichedDetails = details.map(detail => ({
+        ...detail,
+        questionId: detail.id, // For compatibility
+        correct: detail.isCorrect // For compatibility
+      }))
 
       setResult({
         total,
         correct,
-        incorrect,
+        incorrect: total - correct,
         score,
         details: enrichedDetails
       })
