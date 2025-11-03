@@ -1,0 +1,58 @@
+# 🚀 Deploy Script Helper
+
+## Quick Commands
+
+### Push to GitHub
+```powershell
+# Thay YOUR_USERNAME bằng GitHub username của bạn
+git remote add origin https://github.com/YOUR_USERNAME/quiz-fun.git
+git branch -M main
+git push -u origin main
+```
+
+### Update sau khi sửa code
+```powershell
+git add .
+git commit -m "Update features"
+git push
+```
+
+## URLs sau khi deploy
+
+Lưu lại URLs của bạn ở đây:
+
+```
+Backend (Render):  https://_____________________.onrender.com
+Frontend (Vercel): https://_____________________.vercel.app
+```
+
+## Environment Variable cho Vercel
+
+```
+VITE_API_URL = https://YOUR-BACKEND.onrender.com/api
+```
+
+**Nhớ thêm `/api` ở cuối!**
+
+## Checklist Deploy
+
+- [ ] Push code lên GitHub
+- [ ] Deploy backend lên Render
+- [ ] Copy backend URL
+- [ ] Deploy frontend lên Vercel
+- [ ] Thêm VITE_API_URL vào Vercel
+- [ ] Test website
+- [ ] Test chức năng Play
+- [ ] Test chức năng Admin
+
+---
+
+## Platform Links
+
+- GitHub: https://github.com
+- Render: https://render.com
+- Vercel: https://vercel.com
+
+---
+
+Xem hướng dẫn chi tiết: `DEPLOY-STEP-BY-STEP.md`
