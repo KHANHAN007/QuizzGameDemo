@@ -29,8 +29,8 @@ export default function Admin() {
   const [questionSets, setQuestionSets] = useState([])
   const [selectedSetId, setSelectedSetId] = useState(null)
   const [loading, setLoading] = useState(false)
-  const [questionquestionModalVisible, setQuestionModalVisible] = useState(false)
-  const [setquestionModalVisible, setSetModalVisible] = useState(false)
+  const [questionModalVisible, setQuestionModalVisible] = useState(false)
+  const [setModalVisible, setSetModalVisible] = useState(false)
   const [editingQuestion, setEditingQuestion] = useState(null)
   const [editingSet, setEditingSet] = useState(null)
 
