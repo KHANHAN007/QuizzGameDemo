@@ -72,18 +72,18 @@ body {
   justify-content: flex-end;
 }
 
-.header-menu .ant-menu-item {
+/* .header-menu .ant-menu-item {
   color: white !important;
   font-weight: 600;
   font-size: 16px;
   border-bottom: 3px solid transparent !important;
   transition: all 0.3s;
-}
+} */
 
-.header-menu .ant-menu-item:hover {
+/* .header-menu .ant-menu-item:hover {
   color: #fef3c7 !important;
   border-bottom-color: #fef3c7 !important;
-}
+} */
 
 .header-menu .ant-menu-item-selected {
   color: #fef3c7 !important;
@@ -94,9 +94,7 @@ body {
   color: inherit;
   text-decoration: none;
 }
-.ant-menu-item-selected::after{
-    display: none !important;
-}
+
 .app-content {
   max-width: 1200px;
   margin: 24px auto;

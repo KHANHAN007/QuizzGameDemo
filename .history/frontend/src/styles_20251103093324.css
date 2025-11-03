@@ -94,9 +94,28 @@ body {
   color: inherit;
   text-decoration: none;
 }
-.ant-menu-item-selected::after{
-    display: none !important;
+
+.header-menu .ant-menu-item a:hover,
+.header-menu .ant-menu-item a:focus,
+.header-menu .ant-menu-item a:active,
+.header-menu .ant-menu-item a:after{
+  text-decoration: none;
+  outline: none;
 }
+
+.header-menu .ant-menu-title-content {
+  text-decoration: none;
+}
+
+.header-menu .ant-menu-title-content a {
+  text-decoration: none !important;
+  outline: none !important;
+}
+
+.header-menu .ant-menu-title-content a:after {
+  display: none !important;
+}
+
 .app-content {
   max-width: 1200px;
   margin: 24px auto;

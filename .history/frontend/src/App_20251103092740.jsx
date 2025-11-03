@@ -27,7 +27,7 @@ export default function App() {
           </div>
           <Menu
             theme="light"
-            mode="horizontal"
+            // mode="horizontal"
             selectedKeys={[location.pathname]}
             items={menuItems}
             className="header-menu"
@@ -45,7 +45,7 @@ export default function App() {
       
       <Footer className="app-footer">
         <div>🎉 Quiz Fun - Học vui, chơi hay! 🎉</div>
-        <div style={{ fontSize: '12px', opacity: 0.8 }}>Made with ❤️ AnDang</div>
+        <div style={{ fontSize: '12px', opacity: 0.8 }}>Made with ❤️ for elementary students</div>
       </Footer>
     </Layout>
   )

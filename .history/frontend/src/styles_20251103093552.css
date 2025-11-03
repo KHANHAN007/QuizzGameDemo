@@ -94,8 +94,8 @@ body {
   color: inherit;
   text-decoration: none;
 }
-.ant-menu-item-selected::after{
-    display: none !important;
+.ant-menu-title-content::after{
+  display:none !important;
 }
 .app-content {
   max-width: 1200px;

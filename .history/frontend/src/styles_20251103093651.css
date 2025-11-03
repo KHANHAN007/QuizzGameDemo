@@ -94,7 +94,11 @@ body {
   color: inherit;
   text-decoration: none;
 }
-.ant-menu-item-selected::after{
+.ant-menu-title-content::after {
+  display: none !important;
+}
+.ant-menu-item-selected::after,
+.ant-menu-item-selected::hover{
     display: none !important;
 }
 .app-content {

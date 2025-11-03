@@ -26,7 +26,7 @@ export default function App() {
             <span className="logo-text">Quiz Fun</span>
           </div>
           <Menu
-            theme="light"
+            // theme="light"
             mode="horizontal"
             selectedKeys={[location.pathname]}
             items={menuItems}
@@ -45,7 +45,7 @@ export default function App() {
       
       <Footer className="app-footer">
         <div>🎉 Quiz Fun - Học vui, chơi hay! 🎉</div>
-        <div style={{ fontSize: '12px', opacity: 0.8 }}>Made with ❤️ AnDang</div>
+        <div style={{ fontSize: '12px', opacity: 0.8 }}>Made with ❤️ for elementary students</div>
       </Footer>
     </Layout>
   )

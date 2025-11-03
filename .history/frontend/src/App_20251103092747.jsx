@@ -30,7 +30,7 @@ export default function App() {
             mode="horizontal"
             selectedKeys={[location.pathname]}
             items={menuItems}
-            className="header-menu"
+            // className="header-menu"
           />
         </div>
       </Header>
@@ -45,7 +45,7 @@ export default function App() {
       
       <Footer className="app-footer">
         <div>🎉 Quiz Fun - Học vui, chơi hay! 🎉</div>
-        <div style={{ fontSize: '12px', opacity: 0.8 }}>Made with ❤️ AnDang</div>
+        <div style={{ fontSize: '12px', opacity: 0.8 }}>Made with ❤️ for elementary students</div>
       </Footer>
     </Layout>
   )

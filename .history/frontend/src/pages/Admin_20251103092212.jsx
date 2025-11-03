@@ -257,7 +257,7 @@ export default function Admin() {
                 color: idx === record.correctIndex ? '#52c41a' : '#000',
                 fontWeight: idx === record.correctIndex ? 'bold' : 'normal'
               }}>
-                {idx === record.correctIndex && ''}
+                {idx === record.correctIndex && '✓ '}
                 {choice}
               </span>
             </div>

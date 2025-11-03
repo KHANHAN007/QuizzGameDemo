@@ -1,5 +1,5 @@
 import React from 'react'
-import { Routes, Route, Link, useLocation } from 'react-router-dom'
+import { Routes, Route, useNavigate, useLocation } from 'react-router-dom'
 import { Layout, Menu } from 'antd'
 import { TrophyOutlined, ToolOutlined, HomeOutlined } from '@ant-design/icons'
 import Admin from './pages/Admin'
@@ -10,12 +10,17 @@ const { Header, Content, Footer } = Layout
 
 export default function App() {
   const location = useLocation()
+  const navigate = useNavigate()
   
   const menuItems = [
-    { key: '/', label: <Link to="/">Trang chủ</Link>, icon: <HomeOutlined /> },
-    { key: '/play', label: <Link to="/play">Chơi ngay</Link>, icon: <TrophyOutlined /> },
-    { key: '/admin', label: <Link to="/admin">Quản lý</Link>, icon: <ToolOutlined /> }
+    { key: '/', label: 'Trang chủ', icon: <HomeOutlined /> },
+    { key: '/play', label: 'Chơi ngay', icon: <TrophyOutlined /> },
+    { key: '/admin', label: 'Quản lý', icon: <ToolOutlined /> }
   ]
+
+  const handleMenuClick = (e) => {
+    navigate(e.key)
+  }
 
   return (
     <Layout className="app-layout">
@@ -30,6 +35,7 @@ export default function App() {
             mode="horizontal"
             selectedKeys={[location.pathname]}
             items={menuItems}
+            onClick={handleMenuClick}
             className="header-menu"
           />
         </div>
@@ -45,7 +51,7 @@ export default function App() {
       
       <Footer className="app-footer">
         <div>🎉 Quiz Fun - Học vui, chơi hay! 🎉</div>
-        <div style={{ fontSize: '12px', opacity: 0.8 }}>Made with ❤️ AnDang</div>
+        <div style={{ fontSize: '12px', opacity: 0.8 }}>Made with ❤️ for elementary students</div>
       </Footer>
     </Layout>
   )
