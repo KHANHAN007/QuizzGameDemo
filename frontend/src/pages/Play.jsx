@@ -68,25 +68,23 @@ export default function Play() {
       setCurrentIndex(0)
       setResult(null)
       setGameState('playing')
-
-      // Start background music
-      audioManager.loadBackgroundMusic('https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3')
-
+      
+      // Start upbeat background music
+      audioManager.loadBackgroundMusic('https://cdn.pixabay.com/download/audio/2022/03/10/audio_4a1d1681d5.mp3')
+      
       if (data.setSettings?.timePerQuestion > 0) {
         const totalTime = data.setSettings.timePerQuestion * data.questions.length
         setDeadline(Date.now() + totalTime * 1000)
       } else {
         setDeadline(null)
       }
-
-      audioManager.playSound('click')
+      
+      // Bỏ âm thanh click
     } catch (error) {
       message.error('Không thể tải câu hỏi')
       console.error(error)
     }
-  }
-
-  async function submitQuiz() {
+  }  async function submitQuiz() {
     try {
       const answersArray = questions.map(question => ({
         id: question.id,
@@ -111,13 +109,13 @@ export default function Play() {
       })
       setGameState('result')
 
-      // Show confetti if score >= 80%
+      // Play different sounds based on score
       if (score >= 80) {
         setShowConfetti(true)
-        audioManager.playSound('complete')
+        audioManager.playSound('highScore') // Âm thanh cho điểm cao (>=80%)
         setTimeout(() => setShowConfetti(false), 5000)
       } else {
-        audioManager.playSound('wrong')
+        audioManager.playSound('lowScore') // Âm thanh cho điểm thấp (<80%)
       }
     } catch (error) {
       message.error('Không thể chấm điểm')
@@ -133,7 +131,7 @@ export default function Play() {
 
   async function selectAnswer(questionId, choiceIndex) {
     setAnswers(prev => ({ ...prev, [questionId]: choiceIndex }))
-    audioManager.playSound('click')
+    // Bỏ âm thanh click khi chọn đáp án
 
     // If instant feedback is enabled, check answer immediately
     if (setSettings?.showInstantFeedback) {
@@ -168,14 +166,14 @@ export default function Play() {
   function nextQuestion() {
     if (currentIndex < questions.length - 1) {
       setCurrentIndex(prev => prev + 1)
-      audioManager.playSound('click')
+      // Bỏ âm thanh click
     }
   }
 
   function prevQuestion() {
     if (currentIndex > 0) {
       setCurrentIndex(prev => prev - 1)
-      audioManager.playSound('click')
+      // Bỏ âm thanh click
     }
   }
 

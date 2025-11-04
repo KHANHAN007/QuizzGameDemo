@@ -54,8 +54,8 @@ export default function DoAssignment() {
   useEffect(() => {
     loadAssignment()
 
-    // Load background music for quiz
-    audioManager.loadBackgroundMusic('https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3')
+    // Load upbeat background music for quiz
+    audioManager.loadBackgroundMusic('https://cdn.pixabay.com/download/audio/2022/03/10/audio_4a1d1681d5.mp3')
 
     return () => {
       if (autoSaveTimer) clearInterval(autoSaveTimer)
@@ -129,27 +129,27 @@ export default function DoAssignment() {
       ...prev,
       [questionId]: answerIndex
     }))
-    audioManager.playSound('click')
+    // Bỏ âm thanh click khi chọn đáp án
     saveDraft()
   }
 
   function handlePrevious() {
     if (currentQuestionIndex > 0) {
       setCurrentQuestionIndex(currentQuestionIndex - 1)
-      audioManager.playSound('click')
+      // Bỏ âm thanh click
     }
   }
 
   function handleNext() {
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1)
-      audioManager.playSound('click')
+      // Bỏ âm thanh click
     }
   }
 
   function handleJumpToQuestion(index) {
     setCurrentQuestionIndex(index)
-    audioManager.playSound('click')
+    // Bỏ âm thanh click
   }
 
   function getAnsweredCount() {
@@ -219,6 +219,7 @@ export default function DoAssignment() {
       // Clear draft
       localStorage.removeItem(`assignment_${id}_draft`)
 
+      // Play success sound
       audioManager.playSound('complete')
       message.success('Nộp bài thành công! 🎉', 3)
 

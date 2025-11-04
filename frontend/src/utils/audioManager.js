@@ -66,10 +66,10 @@ class AudioManager {
         const soundUrls = {
             correct: 'https://assets.mixkit.co/active_storage/sfx/2018/2018-preview.mp3', // Success bell
             wrong: 'https://assets.mixkit.co/active_storage/sfx/2955/2955-preview.mp3', // Error buzzer
-            click: 'https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3', // Click
             submit: 'https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3', // Success notification
-            complete: 'https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3', // Completion fanfare
-            tick: 'https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3' // Tick sound
+            highScore: 'https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3', // High score celebration (>=80%)
+            lowScore: 'https://assets.mixkit.co/active_storage/sfx/2955/2955-preview.mp3', // Low score (<80%)
+            complete: 'https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3' // Completion fanfare
         }
 
         const url = soundUrls[soundName]
@@ -78,7 +78,7 @@ class AudioManager {
         // Create or reuse audio element
         if (!this.soundEffects[soundName]) {
             this.soundEffects[soundName] = new Audio(url)
-            this.soundEffects[soundName].volume = 0.5
+            this.soundEffects[soundName].volume = 0.6
         }
 
         // Reset and play
