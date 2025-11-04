@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { 
+import {
   Card, Descriptions, Table, Tag, Button, Space, Statistic, Row, Col,
   message, Typography, Divider, Modal, Empty
 } from 'antd'
-import { 
+import {
   ArrowLeftOutlined, CheckCircleOutlined, ClockCircleOutlined,
   CloseCircleOutlined, EyeOutlined, TrophyOutlined
 } from '@ant-design/icons'
@@ -33,7 +33,7 @@ export default function AssignmentDetail() {
         fetchAssignment(id),
         fetchSubmissions({ assignmentId: id })
       ])
-      
+
       setAssignment(assignmentData)
       setSubmissions(submissionsData || [])
     } catch (error) {
@@ -99,8 +99,8 @@ export default function AssignmentDetail() {
       title: 'Thời gian nộp',
       dataIndex: 'submittedAt',
       key: 'submittedAt',
-      render: (timestamp) => timestamp ? 
-        dayjs.unix(timestamp).format('DD/MM/YYYY HH:mm') : 
+      render: (timestamp) => timestamp ?
+        dayjs.unix(timestamp).format('DD/MM/YYYY HH:mm') :
         <Text type="secondary">-</Text>
     },
     {
@@ -108,8 +108,8 @@ export default function AssignmentDetail() {
       key: 'action',
       align: 'center',
       render: (_, record) => record.status === 'completed' ? (
-        <Button 
-          type="link" 
+        <Button
+          type="link"
           icon={<EyeOutlined />}
           onClick={() => handleViewSubmission(record)}
         >
@@ -127,15 +127,15 @@ export default function AssignmentDetail() {
     total: submissions.length,
     completed: submissions.filter(s => s.status === 'completed').length,
     pending: submissions.filter(s => s.status === 'pending').length,
-    avgScore: submissions.length > 0 
+    avgScore: submissions.length > 0
       ? Math.round(submissions.reduce((sum, s) => sum + (s.score || 0), 0) / submissions.filter(s => s.score !== null).length)
       : 0
   }
 
   return (
     <div style={{ padding: '24px' }}>
-      <Button 
-        icon={<ArrowLeftOutlined />} 
+      <Button
+        icon={<ArrowLeftOutlined />}
         onClick={() => navigate('/teacher/assignments')}
         style={{ marginBottom: '16px' }}
       >
@@ -144,7 +144,7 @@ export default function AssignmentDetail() {
 
       <Card>
         <Title level={3}>{assignment.title}</Title>
-        
+
         <Descriptions bordered column={2} style={{ marginTop: '16px' }}>
           <Descriptions.Item label="Mô tả" span={2}>
             {assignment.description || <Text type="secondary">Không có mô tả</Text>}
@@ -160,7 +160,7 @@ export default function AssignmentDetail() {
           </Descriptions.Item>
           <Descriptions.Item label="Hạn nộp">
             {dayjs.unix(assignment.dueDate).format('DD/MM/YYYY HH:mm')}
-            {dayjs.unix(assignment.dueDate).isBefore(dayjs()) && 
+            {dayjs.unix(assignment.dueDate).isBefore(dayjs()) &&
               <Tag color="red" style={{ marginLeft: '8px' }}>Đã quá hạn</Tag>
             }
           </Descriptions.Item>
@@ -172,8 +172,8 @@ export default function AssignmentDetail() {
         <Row gutter={16} style={{ marginBottom: '24px' }}>
           <Col span={6}>
             <Card>
-              <Statistic 
-                title="Tổng số học sinh" 
+              <Statistic
+                title="Tổng số học sinh"
                 value={stats.total}
                 prefix={<TrophyOutlined />}
               />
@@ -181,8 +181,8 @@ export default function AssignmentDetail() {
           </Col>
           <Col span={6}>
             <Card>
-              <Statistic 
-                title="Đã nộp" 
+              <Statistic
+                title="Đã nộp"
                 value={stats.completed}
                 valueStyle={{ color: '#52c41a' }}
                 prefix={<CheckCircleOutlined />}
@@ -191,8 +191,8 @@ export default function AssignmentDetail() {
           </Col>
           <Col span={6}>
             <Card>
-              <Statistic 
-                title="Chưa nộp" 
+              <Statistic
+                title="Chưa nộp"
                 value={stats.pending}
                 valueStyle={{ color: '#faad14' }}
                 prefix={<ClockCircleOutlined />}
@@ -201,8 +201,8 @@ export default function AssignmentDetail() {
           </Col>
           <Col span={6}>
             <Card>
-              <Statistic 
-                title="Điểm trung bình" 
+              <Statistic
+                title="Điểm trung bình"
                 value={stats.avgScore}
                 suffix="/100"
                 valueStyle={{ color: getScoreColor(stats.avgScore) }}
@@ -252,9 +252,9 @@ export default function AssignmentDetail() {
             <Title level={5}>Câu trả lời chi tiết</Title>
             {selectedSubmission.answers && selectedSubmission.answers.length > 0 ? (
               selectedSubmission.answers.map((answer, index) => (
-                <Card 
-                  key={index} 
-                  size="small" 
+                <Card
+                  key={index}
+                  size="small"
                   style={{ marginBottom: '12px' }}
                   type={answer.isCorrect ? 'default' : 'default'}
                   bordered
@@ -270,7 +270,7 @@ export default function AssignmentDetail() {
                       <Tag color={answer.isCorrect ? 'success' : 'error'}>
                         {answer.studentAnswer}
                       </Tag>
-                      {answer.isCorrect ? 
+                      {answer.isCorrect ?
                         <CheckCircleOutlined style={{ color: '#52c41a', marginLeft: '8px' }} /> :
                         <CloseCircleOutlined style={{ color: '#ff4d4f', marginLeft: '8px' }} />
                       }

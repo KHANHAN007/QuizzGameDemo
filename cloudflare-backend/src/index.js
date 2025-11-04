@@ -834,7 +834,7 @@ async function updateQuestion(env, id, data) {
         const current = await env.DB.prepare('SELECT * FROM questions WHERE id = ?')
             .bind(id)
             .first();
-        
+
         if (!current) {
             return errorResponse('Question not found', 404);
         }

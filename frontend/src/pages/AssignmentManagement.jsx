@@ -1,21 +1,21 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { 
-  Card, Table, Button, Modal, Form, Input, Select, DatePicker, 
-  message, Space, Tag, Popconfirm, Typography 
+import {
+  Card, Table, Button, Modal, Form, Input, Select, DatePicker,
+  message, Space, Tag, Popconfirm, Typography
 } from 'antd'
-import { 
-  PlusOutlined, EditOutlined, DeleteOutlined, EyeOutlined, 
-  FileTextOutlined 
+import {
+  PlusOutlined, EditOutlined, DeleteOutlined, EyeOutlined,
+  FileTextOutlined
 } from '@ant-design/icons'
 import dayjs from 'dayjs'
-import { 
-  fetchAssignments, 
-  createAssignment, 
-  updateAssignment, 
+import {
+  fetchAssignments,
+  createAssignment,
+  updateAssignment,
   deleteAssignment,
   fetchQuestionSets,
-  fetchUsers 
+  fetchUsers
 } from '../api'
 
 const { Title } = Typography
@@ -43,7 +43,7 @@ export default function AssignmentManagement() {
         fetchQuestionSets(),
         fetchUsers('student')
       ])
-      
+
       setAssignments(assignmentsData || [])
       setQuestionSets(setsData || [])
       setStudents(studentsData || [])
@@ -158,15 +158,15 @@ export default function AssignmentManagement() {
       align: 'center',
       render: (_, record) => (
         <Space size="small">
-          <Button 
-            type="link" 
+          <Button
+            type="link"
             icon={<EyeOutlined />}
             onClick={() => navigate(`/teacher/assignments/${record.id}`)}
           >
             Xem
           </Button>
-          <Button 
-            type="link" 
+          <Button
+            type="link"
             icon={<EditOutlined />}
             onClick={() => handleEdit(record)}
           >
@@ -195,8 +195,8 @@ export default function AssignmentManagement() {
           <Title level={3} style={{ margin: 0 }}>
             <FileTextOutlined /> Quản lý bài tập
           </Title>
-          <Button 
-            type="primary" 
+          <Button
+            type="primary"
             icon={<PlusOutlined />}
             onClick={handleCreate}
             size="large"
@@ -245,8 +245,8 @@ export default function AssignmentManagement() {
             name="description"
             label="Mô tả"
           >
-            <TextArea 
-              rows={3} 
+            <TextArea
+              rows={3}
               placeholder="Mô tả ngắn về bài tập này..."
             />
           </Form.Item>
@@ -256,7 +256,7 @@ export default function AssignmentManagement() {
             label="Bộ câu hỏi"
             rules={[{ required: true, message: 'Vui lòng chọn bộ câu hỏi!' }]}
           >
-            <Select 
+            <Select
               placeholder="Chọn bộ câu hỏi"
               showSearch
               optionFilterProp="children"
@@ -274,7 +274,7 @@ export default function AssignmentManagement() {
             label="Giao cho học sinh"
             rules={[{ required: true, message: 'Vui lòng chọn ít nhất 1 học sinh!' }]}
           >
-            <Select 
+            <Select
               mode="multiple"
               placeholder="Chọn học sinh hoặc cả lớp"
               showSearch
@@ -303,8 +303,8 @@ export default function AssignmentManagement() {
             label="Hạn nộp"
             rules={[{ required: true, message: 'Vui lòng chọn hạn nộp!' }]}
           >
-            <DatePicker 
-              showTime 
+            <DatePicker
+              showTime
               format="DD/MM/YYYY HH:mm"
               style={{ width: '100%' }}
               placeholder="Chọn ngày và giờ"

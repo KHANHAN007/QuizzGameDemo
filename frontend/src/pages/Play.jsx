@@ -79,7 +79,7 @@ export default function Play() {
       const { correct, total, score, details } = data
       const enrichedDetails = details.map(detail => ({
         ...detail,
-        questionId: detail.id, 
+        questionId: detail.id,
         correct: detail.isCorrect
       }))
 
