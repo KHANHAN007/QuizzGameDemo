@@ -68,7 +68,6 @@ class AudioManager {
             submit: '/music/Am_thanh_chuc_mung_chien_thang-www_tiengdong_com.mp3', // Nộp bài
             highScore: '/music/Am_thanh_chuc_mung_chien_thang-www_tiengdong_com.mp3', // Điểm cao >=80%
             lowScore: '/music/Am_thanh_tra_loi_sai-www_tiengdong_com.mp3', // Điểm thấp <80%
-            complete: '/music/Am_thanh_chuc_mung_chien_thang-www_tiengdong_com.mp3' // Hoàn thành
         }
 
         const url = soundUrls[soundName]
