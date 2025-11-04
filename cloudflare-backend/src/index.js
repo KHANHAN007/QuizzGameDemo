@@ -938,33 +938,50 @@ async function gradeQuiz(env, data) {
     try {
         const { answers } = data;
 
+        // Log incoming payload for easier debugging in Cloudflare logs
+        console.log('gradeQuiz payload:', answers);
+
         if (!answers || !Array.isArray(answers)) {
-            return errorResponse('Invalid data', 400);
+            return errorResponse('Invalid data: "answers" must be an array', 400);
         }
 
         let correct = 0;
         const details = [];
 
         for (const answer of answers) {
+            // Basic validation of answer object
+            if (!answer || typeof answer.id === 'undefined') {
+                console.warn('Skipping invalid answer entry:', answer);
+                details.push({ id: answer?.id ?? null, isCorrect: false, error: 'Invalid answer object' });
+                continue;
+            }
+
             const q = await env.DB.prepare('SELECT * FROM questions WHERE id = ?')
                 .bind(answer.id)
                 .first();
 
             if (!q) {
-                details.push({ id: answer.id, isCorrect: false });
+                console.warn('Question not found for id:', answer.id);
+                details.push({ id: answer.id, isCorrect: false, error: 'Question not found' });
                 continue;
             }
 
-            const isCorrect = q.correctIndex === answer.answerIndex;
+            const choices = [q.choice1, q.choice2, q.choice3, q.choice4];
+            const ai = (typeof answer.answerIndex === 'number') ? answer.answerIndex : null;
+            const isValidIndex = Number.isInteger(ai) && ai >= 0 && ai < choices.length;
+
+            const isCorrect = isValidIndex && q.correctIndex === ai;
             if (isCorrect) correct++;
+
+            const yourAnswer = isValidIndex ? choices[ai] : 'Not answered';
 
             details.push({
                 id: answer.id,
                 questionText: q.text,
                 correctIndex: q.correctIndex,
-                correctAnswer: [q.choice1, q.choice2, q.choice3, q.choice4][q.correctIndex],
-                yourAnswer: [q.choice1, q.choice2, q.choice3, q.choice4][answer.answerIndex] || 'Not answered',
-                yourAnswerIndex: answer.answerIndex,
+                correctAnswer: choices[q.correctIndex],
+                yourAnswer,
+                yourAnswerIndex: isValidIndex ? ai : -1,
                 isCorrect,
                 explanation: q.explanation
             });
