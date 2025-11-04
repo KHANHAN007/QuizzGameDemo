@@ -29,13 +29,13 @@ export default function AssignmentDetail() {
   const loadData = async () => {
     setLoading(true)
     try {
-      const [assignmentRes, submissionsRes] = await Promise.all([
+      const [assignmentData, submissionsData] = await Promise.all([
         fetchAssignment(id),
         fetchSubmissions({ assignmentId: id })
       ])
       
-      setAssignment(assignmentRes.data)
-      setSubmissions(submissionsRes.data || [])
+      setAssignment(assignmentData)
+      setSubmissions(submissionsData || [])
     } catch (error) {
       message.error('Không thể tải dữ liệu: ' + error.message)
     } finally {
