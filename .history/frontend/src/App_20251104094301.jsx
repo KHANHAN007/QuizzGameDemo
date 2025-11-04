@@ -28,42 +28,25 @@ function AppContent() {
   }
 
   const getMenuItems = () => {
-    const items = []
-
-    // Always show Home
-    items.push({ 
-      key: '/', 
-      label: <Link to="/">Trang chủ</Link>, 
-      icon: <HomeOutlined /> 
-    })
+    const items = [
+      { key: '/', label: <Link to="/">Trang chủ</Link>, icon: <HomeOutlined /> }
+    ]
 
     if (isAuthenticated) {
-      // Authenticated users see their dashboard
       if (user?.role === 'teacher') {
         items.push({ 
           key: '/teacher/dashboard', 
-          label: <Link to="/teacher/dashboard">Dashboard</Link>, 
-          icon: <UserOutlined /> 
-        })
-        items.push({ 
-          key: '/teacher/assignments', 
-          label: <Link to="/teacher/assignments">Bài tập</Link>, 
-          icon: <FileTextOutlined /> 
-        })
-        items.push({ 
-          key: '/admin', 
-          label: <Link to="/admin">Câu hỏi</Link>, 
+          label: <Link to="/teacher/dashboard">Giáo viên</Link>, 
           icon: <ToolOutlined /> 
         })
       } else if (user?.role === 'student') {
         items.push({ 
           key: '/student/dashboard', 
-          label: <Link to="/student/dashboard">Dashboard</Link>, 
-          icon: <UserOutlined /> 
+          label: <Link to="/student/dashboard">Học sinh</Link>, 
+          icon: <TrophyOutlined /> 
         })
       }
     } else {
-      // Guest users see guest mode options
       items.push({ 
         key: '/play', 
         label: <Link to="/play">Chơi ngay</Link>, 
@@ -123,7 +106,7 @@ function AppContent() {
       
       <Content className="app-content">
         <Routes>
-          <Route path="/" element={<HomeNew />} />
+          <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/play" element={<Play />} />
           <Route path="/admin" element={<Admin />} />

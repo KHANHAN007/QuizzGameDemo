@@ -123,7 +123,7 @@ function AppContent() {
       
       <Content className="app-content">
         <Routes>
-          <Route path="/" element={<HomeNew />} />
+          <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/play" element={<Play />} />
           <Route path="/admin" element={<Admin />} />
