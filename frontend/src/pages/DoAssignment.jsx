@@ -80,13 +80,18 @@ export default function DoAssignment() {
       const assignmentData = await fetchAssignment(id)
       setAssignment(assignmentData)
 
-      // Check if already submitted - redirect if so
-      if (assignmentData.submissionId || assignmentData.status === 'submitted') {
-        message.warning('Bài tập này đã được nộp rồi!', 3)
+      // Check if already submitted and retake not allowed
+      if ((assignmentData.submissionId || assignmentData.status === 'submitted') && !assignmentData.allowRetake) {
+        message.warning('Bài tập này đã được nộp và không cho phép làm lại!', 3)
         setTimeout(() => {
           navigate('/student/dashboard')
         }, 1000)
         return
+      }
+
+      // If allowRetake, show message
+      if (assignmentData.submissionId && assignmentData.allowRetake) {
+        message.info('Bài tập này cho phép làm nhiều lần. Đây là lần làm mới!', 3)
       }
 
       // Load questions for this assignment's question set
@@ -233,7 +238,7 @@ export default function DoAssignment() {
 
     } catch (error) {
       console.error('Submit error:', error)
-      
+
       // Tắt nhạc nền khi có lỗi
       audioManager.pauseBackgroundMusic()
       audioManager.playSound('wrong')

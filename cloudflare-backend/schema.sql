@@ -77,6 +77,7 @@ CREATE TABLE IF NOT EXISTS assignments (
   dueDate INTEGER NOT NULL, -- Unix timestamp
   assignedDate INTEGER DEFAULT (strftime('%s', 'now')),
   questionCount INTEGER DEFAULT 5, -- Number of questions to include
+  allowRetake INTEGER DEFAULT 0, -- 0 = làm 1 lần, 1 = làm nhiều lần
   status TEXT DEFAULT 'active' CHECK(status IN ('active', 'closed', 'draft')),
   createdAt INTEGER DEFAULT (strftime('%s', 'now')),
   FOREIGN KEY (questionSetId) REFERENCES question_sets(id) ON DELETE CASCADE,
@@ -107,12 +108,13 @@ CREATE TABLE IF NOT EXISTS submissions (
   totalQuestions INTEGER DEFAULT 0,
   correctAnswers INTEGER DEFAULT 0,
   timeTaken INTEGER DEFAULT 0, -- in seconds
+  attemptNumber INTEGER DEFAULT 1, -- Lần làm thứ mấy
   status TEXT DEFAULT 'pending' CHECK(status IN ('pending', 'submitted', 'graded')),
   submittedAt INTEGER,
   createdAt INTEGER DEFAULT (strftime('%s', 'now')),
   FOREIGN KEY (assignmentId) REFERENCES assignments(id) ON DELETE CASCADE,
-  FOREIGN KEY (studentId) REFERENCES users(id) ON DELETE CASCADE,
-  UNIQUE(assignmentId, studentId) -- One student can only submit once per assignment
+  FOREIGN KEY (studentId) REFERENCES users(id) ON DELETE CASCADE
+  -- Bỏ UNIQUE constraint để cho phép làm nhiều lần
 );
 
 -- Submission Answers (Detail of each answer)

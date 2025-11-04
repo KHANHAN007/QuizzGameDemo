@@ -77,17 +77,21 @@ export default function StudentDashboard() {
   }
 
   function handleDoAssignment(assignment) {
-    if (assignment.submissionStatus === 'submitted') {
-      // View result
+    // Check if already submitted and retake not allowed
+    if (assignment.submissionStatus === 'submitted' && !assignment.allowRetake) {
+      // View result only
       navigate(`/student/submissions/${assignment.submissionId}`)
     } else {
-      // Do assignment
+      // Do assignment or redo
       navigate(`/student/assignments/${assignment.id}`)
     }
   }
 
   function getStatusTag(assignment) {
     if (assignment.submissionStatus === 'submitted') {
+      if (assignment.allowRetake) {
+        return <Tag color="blue">Đã làm - Có thể làm lại</Tag>
+      }
       return <Tag color="green">Đã nộp</Tag>
     }
     
@@ -100,7 +104,11 @@ export default function StudentDashboard() {
   }
 
   function getActionButton(assignment) {
-    if (assignment.submissionStatus === 'submitted') {
+    const isSubmitted = assignment.submissionStatus === 'submitted'
+    const canRetake = assignment.allowRetake
+    
+    if (isSubmitted && !canRetake) {
+      // Đã làm và KHÔNG cho phép làm lại - chỉ xem kết quả
       return (
         <Button
           type="default"
@@ -112,6 +120,30 @@ export default function StudentDashboard() {
       )
     }
     
+    if (isSubmitted && canRetake) {
+      // Đã làm và CÓ thể làm lại
+      return (
+        <Space>
+          <Button
+            type="default"
+            icon={<TrophyOutlined />}
+            onClick={() => navigate(`/student/submissions/${assignment.submissionId}`)}
+            size="small"
+          >
+            Xem kết quả
+          </Button>
+          <Button
+            type="primary"
+            icon={<RocketOutlined />}
+            onClick={() => handleDoAssignment(assignment)}
+          >
+            Làm lại
+          </Button>
+        </Space>
+      )
+    }
+    
+    // Chưa làm
     return (
       <Button
         type="primary"

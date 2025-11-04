@@ -550,14 +550,24 @@ async function submitAssignment(env, request, data) {
             return errorResponse('Not assigned to this assignment', 403);
         }
 
-        // Check if already submitted
-        const existing = await env.DB.prepare('SELECT * FROM submissions WHERE assignmentId = ? AND studentId = ?')
+        // Check if assignment allows retake
+        if (!assignment.allowRetake) {
+            // Nếu không cho phép làm lại, check xem đã submit chưa
+            const existing = await env.DB.prepare('SELECT * FROM submissions WHERE assignmentId = ? AND studentId = ?')
+                .bind(assignmentId, authResult.user.id)
+                .first();
+
+            if (existing) {
+                return errorResponse('Assignment already submitted and retake not allowed', 409);
+            }
+        }
+
+        // Calculate attempt number
+        const attempts = await env.DB.prepare('SELECT COUNT(*) as count FROM submissions WHERE assignmentId = ? AND studentId = ?')
             .bind(assignmentId, authResult.user.id)
             .first();
-
-        if (existing) {
-            return errorResponse('Assignment already submitted', 409);
-        }
+        
+        const attemptNumber = (attempts?.count || 0) + 1;
 
         // Grade answers
         let correct = 0;
@@ -586,10 +596,10 @@ async function submitAssignment(env, request, data) {
         const total = answers.length;
         const score = Math.round((correct / total) * 100);
 
-        // Create submission
+        // Create submission with attempt number
         const result = await env.DB.prepare(`
-            INSERT INTO submissions (assignmentId, studentId, score, totalQuestions, correctAnswers, timeTaken, status, submittedAt)
-            VALUES (?, ?, ?, ?, ?, ?, 'submitted', ?)
+            INSERT INTO submissions (assignmentId, studentId, score, totalQuestions, correctAnswers, timeTaken, attemptNumber, status, submittedAt)
+            VALUES (?, ?, ?, ?, ?, ?, ?, 'submitted', ?)
         `).bind(
             assignmentId,
             authResult.user.id,
@@ -597,6 +607,7 @@ async function submitAssignment(env, request, data) {
             total,
             correct,
             timeTaken || 0,
+            attemptNumber,
             Math.floor(Date.now() / 1000)
         ).run();
 

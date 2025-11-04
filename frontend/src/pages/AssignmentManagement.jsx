@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Card, Table, Button, Modal, Form, Input, Select, DatePicker,
-  message, Space, Tag, Popconfirm, Typography
+  message, Space, Tag, Popconfirm, Typography, Switch
 } from 'antd'
 import {
   PlusOutlined, EditOutlined, DeleteOutlined, EyeOutlined,
@@ -296,6 +296,19 @@ export default function AssignmentManagement() {
                 </Select.OptGroup>
               ))}
             </Select>
+          </Form.Item>
+
+          <Form.Item
+            name="allowRetake"
+            label="Cho phép làm lại"
+            valuePropName="checked"
+            initialValue={false}
+            tooltip="Nếu bật, học sinh có thể làm bài nhiều lần"
+          >
+            <Switch 
+              checkedChildren="Cho phép" 
+              unCheckedChildren="Không"
+            />
           </Form.Item>
 
           <Form.Item
