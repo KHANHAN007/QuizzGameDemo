@@ -438,7 +438,11 @@ async function getSubmissions(env, request, url) {
         const user = authResult.user;
 
         let query = `
-            SELECT s.*, u.fullName as studentName, u.class, a.title as assignmentTitle
+            SELECT s.*, 
+                   u.fullName as studentName, 
+                   u.username as studentUsername,
+                   u.class as studentClass, 
+                   a.title as assignmentTitle
             FROM submissions s
             INNER JOIN users u ON s.studentId = u.id
             INNER JOIN assignments a ON s.assignmentId = a.id
