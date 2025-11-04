@@ -227,15 +227,21 @@ async function getAssignments(env, request, url) {
             // Student sees assignments assigned to them
             query = `
                 SELECT a.*, qs.name as questionSetName, u.fullName as teacherName,
-                    s.id as submissionId, s.status as submissionStatus, s.score as submissionScore
+                    s.id as submissionId, s.status as submissionStatus, s.score as submissionScore,
+                    s.attemptNumber
                 FROM assignments a
                 INNER JOIN assignment_students ast ON a.id = ast.assignmentId
                 LEFT JOIN question_sets qs ON a.questionSetId = qs.id
                 LEFT JOIN users u ON a.teacherId = u.id
-                LEFT JOIN submissions s ON a.id = s.assignmentId AND s.studentId = ?
+                LEFT JOIN submissions s ON a.id = s.assignmentId AND s.studentId = ? 
+                    AND s.id = (
+                        SELECT id FROM submissions 
+                        WHERE assignmentId = a.id AND studentId = ? 
+                        ORDER BY attemptNumber DESC LIMIT 1
+                    )
                 WHERE ast.studentId = ? AND a.status = 'active'
             `;
-            params = [user.id, user.id];
+            params = [user.id, user.id, user.id];
 
             if (today === 'true') {
                 const todayStart = new Date();
@@ -287,6 +293,20 @@ async function getAssignment(env, request, id) {
             if (!assigned) {
                 return errorResponse('Forbidden', 403);
             }
+
+            // Get student's latest submission if exists
+            const submission = await env.DB.prepare(`
+                SELECT * FROM submissions 
+                WHERE assignmentId = ? AND studentId = ? 
+                ORDER BY attemptNumber DESC LIMIT 1
+            `).bind(id, user.id).first();
+
+            if (submission) {
+                assignment.submissionId = submission.id;
+                assignment.submissionStatus = submission.status;
+                assignment.submissionScore = submission.score;
+                assignment.attemptNumber = submission.attemptNumber;
+            }
         } else if (user.role === 'teacher' && assignment.teacherId !== user.id) {
             return errorResponse('Forbidden', 403);
         }
@@ -320,7 +340,7 @@ async function createAssignment(env, request, data) {
         const roleCheck = requireRole(authResult.user, ['teacher']);
         if (roleCheck) return errorResponse(roleCheck.error, roleCheck.status);
 
-        const { title, description, questionSetId, dueDate, questionCount, studentIds, status } = data;
+        const { title, description, questionSetId, dueDate, questionCount, studentIds, status, allowRetake } = data;
 
         if (!title || !questionSetId || !dueDate) {
             return errorResponse('Missing required fields', 400);
@@ -328,8 +348,8 @@ async function createAssignment(env, request, data) {
 
         // Create assignment
         const result = await env.DB.prepare(`
-            INSERT INTO assignments (title, description, questionSetId, teacherId, dueDate, questionCount, status)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO assignments (title, description, questionSetId, teacherId, dueDate, questionCount, allowRetake, status)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         `).bind(
             title,
             description || '',
@@ -337,6 +357,7 @@ async function createAssignment(env, request, data) {
             authResult.user.id,
             dueDate,
             questionCount || 5,
+            allowRetake ? 1 : 0,
             status || 'active'
         ).run();
 
@@ -375,13 +396,13 @@ async function updateAssignment(env, request, id, data) {
             return errorResponse('Forbidden', 403);
         }
 
-        const { title, description, dueDate, questionCount, status, studentIds } = data;
+        const { title, description, dueDate, questionCount, status, studentIds, allowRetake } = data;
 
         await env.DB.prepare(`
             UPDATE assignments
-            SET title = ?, description = ?, dueDate = ?, questionCount = ?, status = ?
+            SET title = ?, description = ?, dueDate = ?, questionCount = ?, allowRetake = ?, status = ?
             WHERE id = ?
-        `).bind(title, description || '', dueDate, questionCount, status, id).run();
+        `).bind(title, description || '', dueDate, questionCount, allowRetake ? 1 : 0, status, id).run();
 
         // Update assigned students if provided
         if (studentIds && Array.isArray(studentIds)) {
