@@ -53,10 +53,10 @@ export default function DoAssignment() {
 
   useEffect(() => {
     loadAssignment()
-    
+
     // Load background music for quiz
     audioManager.loadBackgroundMusic('https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3')
-    
+
     return () => {
       if (autoSaveTimer) clearInterval(autoSaveTimer)
       audioManager.pauseBackgroundMusic()
@@ -79,6 +79,15 @@ export default function DoAssignment() {
       // Load assignment details
       const assignmentData = await fetchAssignment(id)
       setAssignment(assignmentData)
+
+      // Check if already submitted - redirect if so
+      if (assignmentData.submissionId || assignmentData.status === 'submitted') {
+        message.warning('Bài tập này đã được nộp rồi!', 3)
+        setTimeout(() => {
+          navigate('/student/dashboard')
+        }, 1000)
+        return
+      }
 
       // Load questions for this assignment's question set
       const quizData = await fetchQuiz(assignmentData.questionSetId, assignmentData.questionCount || 10)
@@ -190,18 +199,17 @@ export default function DoAssignment() {
       setSubmitting(true)
       audioManager.playSound('submit')
 
-      // Prepare submission data
+      // Prepare submission data - backend expects 'selectedAnswer' field
       const submissionAnswers = questions.map(q => ({
         questionId: q.id,
-        answerIndex: answers[q.id] !== undefined ? answers[q.id] : -1,
-        question: q.question,
-        choices: q.choices,
-        correctAnswer: q.correctAnswer
+        selectedAnswer: answers[q.id] !== undefined ? answers[q.id] : -1,
+        timeTaken: 0 // TODO: Track time per question
       }))
 
       const submissionData = {
         assignmentId: parseInt(id),
-        answers: submissionAnswers
+        answers: submissionAnswers,
+        timeTaken: 0 // TODO: Track total time
       }
 
       console.log('📤 Submitting:', submissionData)
@@ -222,7 +230,16 @@ export default function DoAssignment() {
     } catch (error) {
       console.error('Submit error:', error)
       audioManager.playSound('wrong')
-      message.error('Lỗi khi nộp bài: ' + (error.response?.data?.error || error.message), 5)
+
+      // Handle specific error cases
+      if (error.response?.status === 409) {
+        message.error('Bài tập này đã được nộp rồi! Đang chuyển về trang chủ...', 3)
+        setTimeout(() => {
+          navigate('/student/dashboard')
+        }, 1500)
+      } else {
+        message.error('Lỗi khi nộp bài: ' + (error.response?.data?.error || error.message), 5)
+      }
     } finally {
       setSubmitting(false)
     }

@@ -37,7 +37,7 @@ export default function Play() {
 
   useEffect(() => {
     loadQuestionSets()
-    
+
     // Cleanup on unmount
     return () => {
       audioManager.pauseBackgroundMusic()
@@ -68,17 +68,17 @@ export default function Play() {
       setCurrentIndex(0)
       setResult(null)
       setGameState('playing')
-      
+
       // Start background music
       audioManager.loadBackgroundMusic('https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3')
-      
+
       if (data.setSettings?.timePerQuestion > 0) {
         const totalTime = data.setSettings.timePerQuestion * data.questions.length
         setDeadline(Date.now() + totalTime * 1000)
       } else {
         setDeadline(null)
       }
-      
+
       audioManager.playSound('click')
     } catch (error) {
       message.error('Không thể tải câu hỏi')
@@ -140,7 +140,7 @@ export default function Play() {
       try {
         const data = await checkAnswer(questionId, choiceIndex)
         const isCorrect = data.isCorrect
-        
+
         setInstantFeedback(prev => ({
           ...prev,
           [questionId]: {
@@ -149,7 +149,7 @@ export default function Play() {
             explanation: data.explanation
           }
         }))
-        
+
         // Play sound and trigger animation
         if (isCorrect) {
           audioManager.playSound('correct')
@@ -320,7 +320,7 @@ export default function Play() {
         <Card className={`question-card ${isPresentationMode ? 'presentation-mode' : ''}`}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
             <div className="question-number">❓ Câu hỏi {currentIndex + 1}</div>
-            
+
             {/* Audio Controls */}
             <Space className="audio-controls">
               <Space size="small">
@@ -345,7 +345,7 @@ export default function Play() {
               </Space>
             </Space>
           </div>
-          
+
           <h2 className="question-text">{currentQuestion.text}</h2>
 
           {currentFeedback && (
