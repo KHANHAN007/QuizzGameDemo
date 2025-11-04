@@ -59,14 +59,14 @@ function AppContent() {
           icon: <DashboardOutlined />
         })
         items.push({
-          key: '/teacher/assignments',
-          label: <Link to="/teacher/assignments">Bài tập</Link>,
-          icon: <FileTextOutlined />
-        })
-        items.push({
           key: '/admin',
           label: <Link to="/admin">Ngân hàng câu hỏi</Link>,
           icon: <ToolOutlined />
+        })
+        items.push({
+          key: '/teacher/assignments',
+          label: <Link to="/teacher/assignments">Bài tập</Link>,
+          icon: <FileTextOutlined />
         })
       } else if (user?.role === 'student') {
         items.push({
@@ -81,16 +81,11 @@ function AppContent() {
         })
       }
     } else {
-      // Guest users see guest mode options
+      // Guest users - chỉ có thể chơi quiz
       items.push({
         key: '/play',
         label: <Link to="/play">Chơi quiz</Link>,
         icon: <TrophyOutlined />
-      })
-      items.push({
-        key: '/admin',
-        label: <Link to="/admin">Quản lý câu hỏi</Link>,
-        icon: <ToolOutlined />
       })
     }
 
@@ -254,7 +249,14 @@ function AppContent() {
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/play" element={<Play />} />
-          <Route path="/admin" element={<Admin />} />
+          <Route 
+            path="/admin" 
+            element={
+              <ProtectedRoute allowedRole="teacher">
+                <Admin />
+              </ProtectedRoute>
+            } 
+          />
           <Route path="/test-api" element={<TestAPI />} />
 
           {/* Teacher Routes */}

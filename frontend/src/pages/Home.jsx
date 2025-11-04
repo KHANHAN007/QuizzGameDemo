@@ -34,7 +34,7 @@ export default function HomeNew() {
 
       {/* Main Options */}
       <Row gutter={[24, 24]} style={{ marginBottom: '60px' }}>
-        {/* Guest Mode */}
+        {/* Guest Mode hoặc Play Mode */}
         <Col xs={24} md={12}>
           <Card
             hoverable
@@ -46,9 +46,9 @@ export default function HomeNew() {
           >
             <div style={{ textAlign: 'center', padding: '20px 0' }}>
               <TrophyOutlined style={{ fontSize: '64px', color: '#1890ff', marginBottom: '24px' }} />
-              <Title level={2}>Chơi ngay</Title>
+              <Title level={2}>Chơi Quiz</Title>
               <Paragraph style={{ fontSize: '16px', color: '#666', minHeight: '80px' }}>
-                Không cần đăng nhập!<br />
+                {!isAuthenticated ? 'Không cần đăng nhập!' : 'Luyện tập và nâng cao kiến thức'}<br />
                 Chơi quiz vui vẻ, thử thách kiến thức ngay lập tức
               </Paragraph>
               <Space direction="vertical" style={{ width: '100%' }} size="large">
@@ -60,13 +60,6 @@ export default function HomeNew() {
                   style={{ width: '200px', height: '48px', fontSize: '16px' }}
                 >
                   Bắt đầu chơi
-                </Button>
-                <Button
-                  size="large"
-                  onClick={() => navigate('/admin')}
-                  style={{ width: '200px', height: '48px' }}
-                >
-                  Quản lý câu hỏi
                 </Button>
               </Space>
             </div>
@@ -92,7 +85,7 @@ export default function HomeNew() {
                       <Title level={2}>Quản lý Giảng dạy</Title>
                       <Paragraph style={{ fontSize: '16px', color: '#666', minHeight: '80px' }}>
                         Xin chào, <strong>{user.fullName}</strong>!<br />
-                        Quản lý bài tập và theo dõi tiến độ học sinh
+                        Quản lý câu hỏi, bài tập và theo dõi tiến độ học sinh
                       </Paragraph>
                       <Space direction="vertical" style={{ width: '100%' }} size="large">
                         <Button
