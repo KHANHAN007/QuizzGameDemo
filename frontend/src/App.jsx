@@ -249,13 +249,13 @@ function AppContent() {
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/play" element={<Play />} />
-          <Route 
-            path="/admin" 
+          <Route
+            path="/admin"
             element={
               <ProtectedRoute allowedRole="teacher">
                 <Admin />
               </ProtectedRoute>
-            } 
+            }
           />
           <Route path="/test-api" element={<TestAPI />} />
 

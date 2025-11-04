@@ -120,10 +120,11 @@ export default function Login() {
               </div>
               <div className="quick-login-buttons">
                 <Button
-                  onClick={() => quickLogin('teacher1', 'teacher123')}
+                  onClick={() => quickLogin('admin', 'admin123')}
                   className="demo-btn teacher-btn"
+                  block
                 >
-                  teacher1
+                  <strong>admin</strong> / admin123
                 </Button>
               </div>
             </div>
@@ -135,10 +136,18 @@ export default function Login() {
               </div>
               <div className="quick-login-buttons">
                 <Button
-                  onClick={() => quickLogin('student1', 'student123')}
+                  onClick={() => quickLogin('hs5a01', 'password123')}
                   className="demo-btn student-btn"
+                  block
                 >
-                  student1
+                  hs5a01 (Lớp 5A)
+                </Button>
+                <Button
+                  onClick={() => quickLogin('hs5b01', 'password123')}
+                  className="demo-btn student-btn"
+                  block
+                >
+                  hs5b01 (Lớp 5B)
                 </Button>
               </div>
             </div>
@@ -373,14 +382,22 @@ export default function Login() {
 
         .demo-btn {
           width: 100%;
-          height: 36px !important;
+          height: 40px !important;
           font-weight: 500 !important;
           border-radius: 8px !important;
-          border: 1px solid #d9d9d9 !important;
+          border: 2px solid #e0e0e0 !important;
           background: white !important;
           color: #333 !important;
           transition: all 0.3s ease !important;
           font-size: 13px !important;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 4px;
+        }
+
+        .demo-btn strong {
+          color: inherit;
         }
 
         .demo-btn:hover {
@@ -388,12 +405,21 @@ export default function Login() {
           color: #667eea !important;
           background: #f0f5ff !important;
           transform: translateX(4px);
+          box-shadow: 0 2px 8px rgba(102, 126, 234, 0.15) !important;
+        }
+
+        .teacher-btn {
+          border-color: #1890ff !important;
         }
 
         .teacher-btn:hover {
           border-color: #1890ff !important;
           color: #1890ff !important;
           background: #e6f7ff !important;
+        }
+
+        .student-btn {
+          border-color: #52c41a !important;
         }
 
         .student-btn:hover {
