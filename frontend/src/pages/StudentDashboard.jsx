@@ -40,7 +40,7 @@ export default function StudentDashboard() {
       const today = new Date()
       today.setHours(0, 0, 0, 0)
       const todayTimestamp = today.getTime() / 1000
-      
+
       const todayItems = allAssignments.filter(a => {
         const assignedDate = a.assignedDate || a.createdAt
         return assignedDate >= todayTimestamp
@@ -52,7 +52,7 @@ export default function StudentDashboard() {
       const scores = allAssignments
         .filter(a => a.submissionScore !== null && a.submissionScore !== undefined)
         .map(a => a.submissionScore)
-      const avgScore = scores.length > 0 
+      const avgScore = scores.length > 0
         ? Math.round(scores.reduce((sum, s) => sum + s, 0) / scores.length)
         : 0
 
@@ -94,19 +94,19 @@ export default function StudentDashboard() {
       }
       return <Tag color="green">Đã nộp</Tag>
     }
-    
+
     const now = Date.now() / 1000
     if (assignment.dueDate < now) {
       return <Tag color="red">Quá hạn</Tag>
     }
-    
+
     return <Tag color="orange">Chưa làm</Tag>
   }
 
   function getActionButton(assignment) {
     const isSubmitted = assignment.submissionStatus === 'submitted'
     const canRetake = assignment.allowRetake
-    
+
     if (isSubmitted && !canRetake) {
       // Đã làm và KHÔNG cho phép làm lại - chỉ xem kết quả
       return (
@@ -119,7 +119,7 @@ export default function StudentDashboard() {
         </Button>
       )
     }
-    
+
     if (isSubmitted && canRetake) {
       // Đã làm và CÓ thể làm lại
       return (
@@ -142,7 +142,7 @@ export default function StudentDashboard() {
         </Space>
       )
     }
-    
+
     // Chưa làm
     return (
       <Button
@@ -244,7 +244,7 @@ export default function StudentDashboard() {
                       <div>{assignment.questionSetName}</div>
                       <div style={{ marginTop: 4 }}>
                         <small>
-                          Giáo viên: {assignment.teacherName} | 
+                          Giáo viên: {assignment.teacherName} |
                           Hạn nộp: {new Date(assignment.dueDate * 1000).toLocaleDateString('vi-VN')}
                         </small>
                       </div>
@@ -293,8 +293,8 @@ export default function StudentDashboard() {
                       <div>{assignment.questionSetName}</div>
                       <div style={{ marginTop: 4 }}>
                         <small>
-                          Giáo viên: {assignment.teacherName} | 
-                          Hạn nộp: {new Date(assignment.dueDate * 1000).toLocaleDateString('vi-VN')} | 
+                          Giáo viên: {assignment.teacherName} |
+                          Hạn nộp: {new Date(assignment.dueDate * 1000).toLocaleDateString('vi-VN')} |
                           Giao ngày: {new Date(assignment.assignedDate * 1000).toLocaleDateString('vi-VN')}
                         </small>
                       </div>

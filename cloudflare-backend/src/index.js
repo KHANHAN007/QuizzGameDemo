@@ -566,7 +566,7 @@ async function submitAssignment(env, request, data) {
         const attempts = await env.DB.prepare('SELECT COUNT(*) as count FROM submissions WHERE assignmentId = ? AND studentId = ?')
             .bind(assignmentId, authResult.user.id)
             .first();
-        
+
         const attemptNumber = (attempts?.count || 0) + 1;
 
         // Grade answers

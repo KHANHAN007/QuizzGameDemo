@@ -27,20 +27,36 @@ CREATE TABLE submissions (
   correctAnswers INTEGER DEFAULT 0,
   timeTaken INTEGER DEFAULT 0,
   attemptNumber INTEGER DEFAULT 1,
-  status TEXT DEFAULT 'pending' CHECK(status IN ('pending', 'submitted', 'graded')),
+  status TEXT DEFAULT 'submitted',
   submittedAt INTEGER,
   createdAt INTEGER DEFAULT (strftime('%s', 'now')),
   FOREIGN KEY (assignmentId) REFERENCES assignments(id) ON DELETE CASCADE,
   FOREIGN KEY (studentId) REFERENCES users(id) ON DELETE CASCADE
 );
 
--- Restore data
-INSERT INTO submissions SELECT * FROM submissions_backup;
+-- Restore data - ensure status is valid
+INSERT INTO submissions 
+  SELECT 
+    id, 
+    assignmentId, 
+    studentId, 
+    score, 
+    totalQuestions, 
+    correctAnswers, 
+    timeTaken, 
+    COALESCE(attemptNumber, 1) as attemptNumber,
+    CASE 
+      WHEN status IN ('pending', 'submitted', 'graded') THEN status 
+      ELSE 'submitted' 
+    END as status,
+    submittedAt, 
+    createdAt 
+  FROM submissions_backup;
 
 -- Drop backup table
 DROP TABLE submissions_backup;
 
--- Recreate index
+-- Recreate indexes
 CREATE INDEX IF NOT EXISTS idx_submissions_assignmentId ON submissions(assignmentId);
 CREATE INDEX IF NOT EXISTS idx_submissions_studentId ON submissions(studentId);
 CREATE INDEX IF NOT EXISTS idx_submissions_attempt ON submissions(assignmentId, studentId, attemptNumber);

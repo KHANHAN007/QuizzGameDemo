@@ -305,8 +305,8 @@ export default function AssignmentManagement() {
             initialValue={false}
             tooltip="Nếu bật, học sinh có thể làm bài nhiều lần"
           >
-            <Switch 
-              checkedChildren="Cho phép" 
+            <Switch
+              checkedChildren="Cho phép"
               unCheckedChildren="Không"
             />
           </Form.Item>
