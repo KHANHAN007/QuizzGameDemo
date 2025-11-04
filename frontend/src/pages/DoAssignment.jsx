@@ -21,7 +21,8 @@ import {
   SendOutlined,
   LeftOutlined,
   RightOutlined,
-  ExclamationCircleOutlined
+  ExclamationCircleOutlined,
+  FileTextOutlined
 } from '@ant-design/icons'
 import { fetchAssignment, fetchQuiz, submitAssignment } from '../api'
 import { useAuth } from '../contexts/AuthContext'
@@ -32,7 +33,7 @@ export default function DoAssignment() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { user } = useAuth()
-  
+
   const [assignment, setAssignment] = useState(null)
   const [questions, setQuestions] = useState([])
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
@@ -61,7 +62,7 @@ export default function DoAssignment() {
   async function loadAssignment() {
     try {
       setLoading(true)
-      
+
       // Load assignment details
       const assignmentData = await fetchAssignment(id)
       setAssignment(assignmentData)
@@ -182,7 +183,7 @@ export default function DoAssignment() {
       localStorage.removeItem(`assignment_${id}_draft`)
 
       message.success('Nộp bài thành công! 🎉', 3)
-      
+
       // Navigate back to dashboard
       setTimeout(() => {
         navigate('/student/dashboard')
@@ -237,7 +238,7 @@ export default function DoAssignment() {
               {assignment.description || ''}
             </p>
           </Col>
-          
+
           <Col xs={24} md={12} style={{ textAlign: 'right' }}>
             <Space size="large">
               {timeLeft !== null && (
@@ -274,7 +275,7 @@ export default function DoAssignment() {
       <Row gutter={24}>
         {/* Question Panel */}
         <Col xs={24} lg={16}>
-          <Card 
+          <Card
             className="question-card"
             style={{ minHeight: '500px' }}
           >
@@ -362,9 +363,9 @@ export default function DoAssignment() {
         {/* Question Navigator */}
         <Col xs={24} lg={8}>
           <Card title={<><FileTextOutlined /> Danh sách câu hỏi</>}>
-            <div style={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(5, 1fr)', 
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(5, 1fr)',
               gap: '8px',
               marginBottom: '16px'
             }}>
@@ -375,7 +376,7 @@ export default function DoAssignment() {
                   onClick={() => handleJumpToQuestion(index)}
                   style={{
                     height: '40px',
-                    background: answers[q.id] !== undefined 
+                    background: answers[q.id] !== undefined
                       ? (currentQuestionIndex === index ? '#1890ff' : '#52c41a')
                       : (currentQuestionIndex === index ? '#1890ff' : '#fff'),
                     color: answers[q.id] !== undefined || currentQuestionIndex === index ? '#fff' : '#333',
