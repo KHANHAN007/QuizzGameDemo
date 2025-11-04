@@ -118,22 +118,6 @@ function AppContent() {
               </ProtectedRoute>
             } 
           />
-          <Route 
-            path="/teacher/assignments" 
-            element={
-              <ProtectedRoute allowedRole="teacher">
-                <AssignmentManagement />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/teacher/assignments/:id" 
-            element={
-              <ProtectedRoute allowedRole="teacher">
-                <AssignmentDetail />
-              </ProtectedRoute>
-            } 
-          />
           
           {/* Student Routes */}
           <Route 
