@@ -12,7 +12,8 @@ import {
   Tag,
   Row,
   Col,
-  Alert
+  Alert,
+  Switch
 } from 'antd'
 import {
   CheckCircleOutlined,
@@ -22,10 +23,14 @@ import {
   LeftOutlined,
   RightOutlined,
   ExclamationCircleOutlined,
-  FileTextOutlined
+  FileTextOutlined,
+  SoundOutlined,
+  CustomerServiceOutlined
 } from '@ant-design/icons'
 import { fetchAssignment, fetchQuiz, submitAssignment } from '../api'
 import { useAuth } from '../contexts/AuthContext'
+import audioManager from '../utils/audioManager'
+import './DoAssignment.css'
 
 const { Countdown } = Statistic
 
@@ -42,11 +47,19 @@ export default function DoAssignment() {
   const [submitting, setSubmitting] = useState(false)
   const [timeLeft, setTimeLeft] = useState(null)
   const [autoSaveTimer, setAutoSaveTimer] = useState(null)
+  const [isMuted, setIsMuted] = useState(audioManager.isMutedStatus())
+  const [bgMusicEnabled, setBgMusicEnabled] = useState(audioManager.isBgMusicEnabled())
+  const [shakeAnswer, setShakeAnswer] = useState(null) // Track which answer to shake
 
   useEffect(() => {
     loadAssignment()
+    
+    // Load background music for quiz
+    audioManager.loadBackgroundMusic('https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3')
+    
     return () => {
       if (autoSaveTimer) clearInterval(autoSaveTimer)
+      audioManager.pauseBackgroundMusic()
     }
   }, [id])
 
@@ -107,26 +120,41 @@ export default function DoAssignment() {
       ...prev,
       [questionId]: answerIndex
     }))
+    audioManager.playSound('click')
+    saveDraft()
   }
 
   function handlePrevious() {
     if (currentQuestionIndex > 0) {
       setCurrentQuestionIndex(currentQuestionIndex - 1)
+      audioManager.playSound('click')
     }
   }
 
   function handleNext() {
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1)
+      audioManager.playSound('click')
     }
   }
 
   function handleJumpToQuestion(index) {
     setCurrentQuestionIndex(index)
+    audioManager.playSound('click')
   }
 
   function getAnsweredCount() {
     return Object.keys(answers).length
+  }
+
+  function handleToggleMute() {
+    const newMutedState = audioManager.toggleMute()
+    setIsMuted(newMutedState)
+  }
+
+  function handleToggleBgMusic() {
+    const newState = audioManager.toggleBackgroundMusic()
+    setBgMusicEnabled(newState)
   }
 
   function handleSubmitConfirm() {
@@ -160,6 +188,7 @@ export default function DoAssignment() {
   async function handleSubmit() {
     try {
       setSubmitting(true)
+      audioManager.playSound('submit')
 
       // Prepare submission data
       const submissionAnswers = questions.map(q => ({
@@ -182,6 +211,7 @@ export default function DoAssignment() {
       // Clear draft
       localStorage.removeItem(`assignment_${id}_draft`)
 
+      audioManager.playSound('complete')
       message.success('Nộp bài thành công! 🎉', 3)
 
       // Navigate back to dashboard
@@ -191,6 +221,7 @@ export default function DoAssignment() {
 
     } catch (error) {
       console.error('Submit error:', error)
+      audioManager.playSound('wrong')
       message.error('Lỗi khi nộp bài: ' + (error.response?.data?.error || error.message), 5)
     } finally {
       setSubmitting(false)
@@ -241,6 +272,31 @@ export default function DoAssignment() {
 
           <Col xs={24} md={12} style={{ textAlign: 'right' }}>
             <Space size="large">
+              {/* Audio Controls */}
+              <Space direction="vertical" size="small" style={{ textAlign: 'center' }}>
+                <div>
+                  <SoundOutlined /> Âm thanh
+                </div>
+                <Switch
+                  checked={!isMuted}
+                  onChange={handleToggleMute}
+                  checkedChildren="Bật"
+                  unCheckedChildren="Tắt"
+                />
+              </Space>
+
+              <Space direction="vertical" size="small" style={{ textAlign: 'center' }}>
+                <div>
+                  <CustomerServiceOutlined /> Nhạc nền
+                </div>
+                <Switch
+                  checked={bgMusicEnabled}
+                  onChange={handleToggleBgMusic}
+                  checkedChildren="Bật"
+                  unCheckedChildren="Tắt"
+                />
+              </Space>
+
               {timeLeft !== null && (
                 <Countdown
                   title={<><ClockCircleOutlined /> Thời gian còn lại</>}

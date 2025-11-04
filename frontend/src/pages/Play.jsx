@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Card, Button, Radio, Progress, Result, Space, Select, Statistic, Alert, message } from 'antd'
+import { Card, Button, Radio, Progress, Result, Space, Select, Statistic, Alert, message, Switch } from 'antd'
 import {
   ClockCircleOutlined,
   TrophyOutlined,
@@ -8,10 +8,14 @@ import {
   HomeOutlined,
   ReloadOutlined,
   CheckCircleOutlined,
-  CloseCircleOutlined
+  CloseCircleOutlined,
+  SoundOutlined,
+  CustomerServiceOutlined
 } from '@ant-design/icons'
 import Confetti from 'react-confetti'
 import { fetchQuiz, gradeQuiz, checkAnswer, fetchQuestionSets } from '../api'
+import audioManager from '../utils/audioManager'
+import './DoAssignment.css'
 const { Countdown } = Statistic
 
 export default function Play() {
@@ -27,9 +31,17 @@ export default function Play() {
   const [result, setResult] = useState(null)
   const [deadline, setDeadline] = useState(null)
   const [showConfetti, setShowConfetti] = useState(false)
+  const [isMuted, setIsMuted] = useState(audioManager.isMutedStatus())
+  const [bgMusicEnabled, setBgMusicEnabled] = useState(audioManager.isBgMusicEnabled())
+  const [shakeAnswer, setShakeAnswer] = useState(null)
 
   useEffect(() => {
     loadQuestionSets()
+    
+    // Cleanup on unmount
+    return () => {
+      audioManager.pauseBackgroundMusic()
+    }
   }, [])
 
   async function loadQuestionSets() {
@@ -56,12 +68,18 @@ export default function Play() {
       setCurrentIndex(0)
       setResult(null)
       setGameState('playing')
+      
+      // Start background music
+      audioManager.loadBackgroundMusic('https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3')
+      
       if (data.setSettings?.timePerQuestion > 0) {
         const totalTime = data.setSettings.timePerQuestion * data.questions.length
         setDeadline(Date.now() + totalTime * 1000)
       } else {
         setDeadline(null)
       }
+      
+      audioManager.playSound('click')
     } catch (error) {
       message.error('Không thể tải câu hỏi')
       console.error(error)
@@ -75,6 +93,7 @@ export default function Play() {
         answerIndex: answers[question.id] !== undefined ? answers[question.id] : -1
       }))
 
+      audioManager.playSound('submit')
       const data = await gradeQuiz(answersArray)
       const { correct, total, score, details } = data
       const enrichedDetails = details.map(detail => ({
@@ -95,33 +114,51 @@ export default function Play() {
       // Show confetti if score >= 80%
       if (score >= 80) {
         setShowConfetti(true)
+        audioManager.playSound('complete')
         setTimeout(() => setShowConfetti(false), 5000)
+      } else {
+        audioManager.playSound('wrong')
       }
     } catch (error) {
       message.error('Không thể chấm điểm')
+      audioManager.playSound('wrong')
       console.error(error)
     }
   }
 
   function handleTimeUp() {
+    audioManager.playSound('wrong')
     submitQuiz()
   }
 
   async function selectAnswer(questionId, choiceIndex) {
     setAnswers(prev => ({ ...prev, [questionId]: choiceIndex }))
+    audioManager.playSound('click')
 
     // If instant feedback is enabled, check answer immediately
     if (setSettings?.showInstantFeedback) {
       try {
         const data = await checkAnswer(questionId, choiceIndex)
+        const isCorrect = data.isCorrect
+        
         setInstantFeedback(prev => ({
           ...prev,
           [questionId]: {
-            isCorrect: data.isCorrect,
+            isCorrect: isCorrect,
             correctIndex: data.correctIndex,
             explanation: data.explanation
           }
         }))
+        
+        // Play sound and trigger animation
+        if (isCorrect) {
+          audioManager.playSound('correct')
+        } else {
+          audioManager.playSound('wrong')
+          // Trigger shake animation
+          setShakeAnswer(choiceIndex)
+          setTimeout(() => setShakeAnswer(null), 500)
+        }
       } catch (error) {
         console.error('Failed to check answer:', error)
       }
@@ -131,13 +168,25 @@ export default function Play() {
   function nextQuestion() {
     if (currentIndex < questions.length - 1) {
       setCurrentIndex(prev => prev + 1)
+      audioManager.playSound('click')
     }
   }
 
   function prevQuestion() {
     if (currentIndex > 0) {
       setCurrentIndex(prev => prev - 1)
+      audioManager.playSound('click')
     }
+  }
+
+  function handleToggleMute() {
+    const newMutedState = audioManager.toggleMute()
+    setIsMuted(newMutedState)
+  }
+
+  function handleToggleBgMusic() {
+    const newState = audioManager.toggleBackgroundMusic()
+    setBgMusicEnabled(newState)
   }
 
   function resetGame() {
@@ -269,7 +318,34 @@ export default function Play() {
         </div>
 
         <Card className={`question-card ${isPresentationMode ? 'presentation-mode' : ''}`}>
-          <div className="question-number">❓ Câu hỏi {currentIndex + 1}</div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <div className="question-number">❓ Câu hỏi {currentIndex + 1}</div>
+            
+            {/* Audio Controls */}
+            <Space className="audio-controls">
+              <Space size="small">
+                <SoundOutlined />
+                <Switch
+                  checked={!isMuted}
+                  onChange={handleToggleMute}
+                  size="small"
+                  checkedChildren="ON"
+                  unCheckedChildren="OFF"
+                />
+              </Space>
+              <Space size="small">
+                <CustomerServiceOutlined />
+                <Switch
+                  checked={bgMusicEnabled}
+                  onChange={handleToggleBgMusic}
+                  size="small"
+                  checkedChildren="🎵"
+                  unCheckedChildren="🔇"
+                />
+              </Space>
+            </Space>
+          </div>
+          
           <h2 className="question-text">{currentQuestion.text}</h2>
 
           {currentFeedback && (
@@ -279,6 +355,7 @@ export default function Play() {
               type={currentFeedback.isCorrect ? 'success' : 'error'}
               showIcon
               style={{ marginBottom: 24 }}
+              className={currentFeedback.isCorrect ? 'celebration' : ''}
             />
           )}
 
@@ -293,12 +370,13 @@ export default function Play() {
                 const isSelected = answers[currentQuestion.id] === index
                 const isCorrect = currentFeedback && currentFeedback.correctIndex === index
                 const isWrong = currentFeedback && isSelected && !currentFeedback.isCorrect
+                const shouldShake = shakeAnswer === index
 
                 return (
                   <Radio
                     key={index}
                     value={index}
-                    className={`choice-radio ${isCorrect ? 'correct-choice' : ''} ${isWrong ? 'wrong-choice' : ''}`}
+                    className={`choice-radio ${isCorrect ? 'correct-choice answer-correct' : ''} ${isWrong ? 'wrong-choice answer-shake' : ''} ${shouldShake ? 'answer-shake' : ''}`}
                   >
                     <span className="choice-letter">{String.fromCharCode(65 + index)}</span>
                     <span className="choice-text">{choice}</span>
