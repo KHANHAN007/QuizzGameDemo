@@ -12,51 +12,51 @@ export function AuthProvider({ children }) {
     // Check if user is logged in on mount
     const storedToken = localStorage.getItem('token')
     const storedUser = localStorage.getItem('user')
-    
+
     if (storedToken && storedUser) {
       setToken(storedToken)
       setUser(JSON.parse(storedUser))
-      
+
       // Set axios default header
       api.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`
     }
-    
+
     setLoading(false)
   }, [])
 
   const login = async (username, password) => {
     try {
       console.log('🔑 AuthContext: Starting login...', { username })
-      
+
       const response = await apiLogin(username, password)
-      
+
       console.log('📦 AuthContext: API response:', response)
-      
+
       // apiLogin now returns data directly
       const { token: newToken, user: newUser } = response
-      
+
       if (!newToken || !newUser) {
         console.error('❌ AuthContext: Invalid response format:', response)
         throw new Error('Invalid response from server')
       }
-      
-      console.log('✅ AuthContext: Login successful', { 
-        username: newUser.username, 
+
+      console.log('✅ AuthContext: Login successful', {
+        username: newUser.username,
         role: newUser.role,
-        tokenLength: newToken?.length 
+        tokenLength: newToken?.length
       })
-      
+
       // Save to state
       setToken(newToken)
       setUser(newUser)
-      
+
       // Save to localStorage
       localStorage.setItem('token', newToken)
       localStorage.setItem('user', JSON.stringify(newUser))
-      
+
       // Set axios default header
       api.defaults.headers.common['Authorization'] = `Bearer ${newToken}`
-      
+
       return { success: true, user: newUser }
     } catch (error) {
       console.error('❌ AuthContext: Login error:', {

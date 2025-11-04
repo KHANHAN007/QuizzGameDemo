@@ -20,17 +20,17 @@ export default function Login() {
 
   async function handleLogin(values) {
     setLoading(true)
-    
+
     try {
       console.log('🔐 Attempting login:', { username: values.username })
-      
+
       const result = await login(values.username, values.password)
-      
+
       console.log('✅ Login result:', result)
-      
+
       if (result.success) {
         message.success(`Chào mừng, ${result.user.fullName}!`, 3)
-        
+
         // Redirect based on role
         if (result.user.role === 'teacher') {
           navigate('/teacher/dashboard')

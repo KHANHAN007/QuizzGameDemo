@@ -23,6 +23,7 @@ import TeacherDashboard from './pages/TeacherDashboard'
 import StudentDashboard from './pages/StudentDashboard'
 import AssignmentManagement from './pages/AssignmentManagement'
 import AssignmentDetail from './pages/AssignmentDetail'
+import DoAssignment from './pages/DoAssignment'
 import TestAPI from './pages/TestAPI'
 
 const { Header, Content, Footer } = Layout
@@ -291,6 +292,14 @@ function AppContent() {
             element={
               <ProtectedRoute allowedRole="student">
                 <StudentDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/student/assignments/:id"
+            element={
+              <ProtectedRoute allowedRole="student">
+                <DoAssignment />
               </ProtectedRoute>
             }
           />
