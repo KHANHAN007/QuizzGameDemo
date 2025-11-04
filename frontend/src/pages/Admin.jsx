@@ -61,8 +61,8 @@ export default function Admin() {
 
   async function loadAllQuestions() {
     try {
-      const response = await fetchQuestions() // Get all questions
-      setAllQuestions(response.data)
+      const data = await fetchQuestions() // Get all questions
+      setAllQuestions(data)
     } catch (error) {
       console.error('Could not load all questions')
     }
@@ -70,10 +70,10 @@ export default function Admin() {
 
   async function loadQuestionSets() {
     try {
-      const response = await fetchQuestionSets()
-      setQuestionSets(response.data)
-      if (response.data.length > 0 && !selectedSetId) {
-        setSelectedSetId(response.data[0].id)
+      const data = await fetchQuestionSets()
+      setQuestionSets(data)
+      if (data.length > 0 && !selectedSetId) {
+        setSelectedSetId(data[0].id)
       }
     } catch (error) {
       message.error('Không thể tải danh sách câu hỏi')
@@ -83,9 +83,9 @@ export default function Admin() {
   async function loadQuestions(setId) {
     setLoading(true)
     try {
-      const response = await fetchQuestions(setId)
+      const data = await fetchQuestions(setId)
       // Backend already returns choices array and correctIndex
-      setQuestions(response.data)
+      setQuestions(data)
     } catch (error) {
       message.error('Không thể tải câu hỏi')
     } finally {
@@ -131,11 +131,11 @@ export default function Admin() {
 
   async function handleCreateSet(values) {
     try {
-      const response = await createQuestionSet(values)
+      const data = await createQuestionSet(values)
       message.success('✅ Đã tạo danh sách mới!')
       setSetModalVisible(false)
       await loadQuestionSets()
-      setSelectedSetId(response.data.id)
+      setSelectedSetId(data.id)
 
       // Auto switch to questions tab and open add question modal
       setActiveTab('questions')
@@ -173,8 +173,8 @@ export default function Admin() {
 
   async function handleExport() {
     try {
-      const response = await exportCSV(selectedSetId)
-      const url = window.URL.createObjectURL(new Blob([response.data]))
+      const blob = await exportCSV(selectedSetId)
+      const url = window.URL.createObjectURL(new Blob([blob]))
       const link = document.createElement('a')
       link.href = url
       const currentSet = questionSets.find(s => s.id === selectedSetId)
@@ -194,8 +194,8 @@ export default function Admin() {
     formData.append('setId', selectedSetId)
 
     try {
-      const response = await importCSV(formData)
-      message.success(`📤 Đã nhập ${response.data.imported} câu hỏi!`)
+      const data = await importCSV(formData)
+      message.success(`📤 Đã nhập ${data.imported} câu hỏi!`)
       loadQuestions(selectedSetId)
     } catch (error) {
       message.error('Không thể nhập file CSV')
