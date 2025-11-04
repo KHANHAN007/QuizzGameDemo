@@ -106,7 +106,7 @@ body {
 .user-dropdown {
   cursor: pointer;
   padding: 8px 16px;
-  border-radius: 8px;
+  borderRadius: 8px;
   transition: background 0.3s;
 }
 
@@ -119,20 +119,20 @@ body {
   .app-header {
     padding: 0 16px !important;
   }
-
+  
   .logo {
     min-width: 100px;
     gap: 4px;
   }
-
+  
   .logo-text {
     font-size: 16px;
   }
-
+  
   .logo-icon {
     font-size: 24px;
   }
-
+  
   .header-menu .ant-menu-item {
     font-size: 14px;
     padding: 0 12px;

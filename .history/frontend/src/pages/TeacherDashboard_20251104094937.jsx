@@ -35,24 +35,24 @@ export default function TeacherDashboard() {
     setLoading(true)
     try {
       // Load assignments
-      const assignmentsData = await fetchAssignments()
-      setAssignments(assignmentsData)
+      const assignmentsRes = await axios.get(`${API_BASE_URL}/assignments`)
+      setAssignments(assignmentsRes.data)
 
       // Load students
-      const studentsData = await fetchUsers('student')
-      setStudents(studentsData)
+      const studentsRes = await axios.get(`${API_BASE_URL}/users?role=student`)
+      setStudents(studentsRes.data)
 
       // Calculate stats
-      const active = assignmentsData.filter(a => a.status === 'active').length
+      const active = assignmentsRes.data.filter(a => a.status === 'active').length
       setStats({
-        totalAssignments: assignmentsData.length,
+        totalAssignments: assignmentsRes.data.length,
         activeAssignments: active,
-        totalStudents: studentsData.length,
-        submittedToday: assignmentsData.reduce((sum, a) => sum + (a.submittedCount || 0), 0)
+        totalStudents: studentsRes.data.length,
+        submittedToday: assignmentsRes.data.reduce((sum, a) => sum + (a.submittedCount || 0), 0)
       })
     } catch (error) {
-      message.error('Không thể tải dữ liệu: ' + (error.message || 'Lỗi không xác định'))
-      console.error('Dashboard error:', error)
+      message.error('Không thể tải dữ liệu')
+      console.error(error)
     } finally {
       setLoading(false)
     }

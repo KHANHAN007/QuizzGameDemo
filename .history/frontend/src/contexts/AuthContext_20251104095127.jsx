@@ -67,15 +67,27 @@ export function AuthProvider({ children }) {
     }
   }
 
+  const isAuthenticated = () => {
+    return !!token && !!user
+  }
+
+  const isTeacher = () => {
+    return user?.role === 'teacher'
+  }
+
+  const isStudent = () => {
+    return user?.role === 'student'
+  }
+
   const value = {
     user,
     token,
     loading,
     login,
     logout,
-    isAuthenticated: !!token && !!user,
-    isTeacher: user?.role === 'teacher',
-    isStudent: user?.role === 'student'
+    isAuthenticated,
+    isTeacher,
+    isStudent
   }
 
   return (

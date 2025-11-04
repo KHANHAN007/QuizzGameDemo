@@ -33,23 +33,16 @@ export default function StudentDashboard() {
     setLoading(true)
     try {
       // Load all assignments
-      const allAssignments = await fetchAssignments()
-      setAssignments(allAssignments)
+      const allRes = await axios.get(`${API_BASE_URL}/assignments`)
+      setAssignments(allRes.data)
 
-      // Filter today's assignments (simplified - just show recent)
-      const today = new Date()
-      today.setHours(0, 0, 0, 0)
-      const todayTimestamp = today.getTime() / 1000
-      
-      const todayItems = allAssignments.filter(a => {
-        const assignedDate = a.assignedDate || a.createdAt
-        return assignedDate >= todayTimestamp
-      })
-      setTodayAssignments(todayItems)
+      // Load today's assignments
+      const todayRes = await axios.get(`${API_BASE_URL}/assignments?today=true`)
+      setTodayAssignments(todayRes.data)
 
       // Calculate stats
-      const completed = allAssignments.filter(a => a.submissionStatus === 'submitted').length
-      const scores = allAssignments
+      const completed = allRes.data.filter(a => a.submissionStatus === 'submitted').length
+      const scores = allRes.data
         .filter(a => a.submissionScore !== null && a.submissionScore !== undefined)
         .map(a => a.submissionScore)
       const avgScore = scores.length > 0 
@@ -57,14 +50,14 @@ export default function StudentDashboard() {
         : 0
 
       setStats({
-        total: allAssignments.length,
+        total: allRes.data.length,
         completed,
-        pending: allAssignments.length - completed,
+        pending: allRes.data.length - completed,
         avgScore
       })
     } catch (error) {
-      message.error('Không thể tải bài tập: ' + (error.message || 'Lỗi không xác định'))
-      console.error('Student dashboard error:', error)
+      message.error('Không thể tải bài tập')
+      console.error(error)
     } finally {
       setLoading(false)
     }
