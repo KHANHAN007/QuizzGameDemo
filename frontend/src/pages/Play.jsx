@@ -109,6 +109,9 @@ export default function Play() {
       })
       setGameState('result')
 
+      // Tắt nhạc nền khi kết thúc
+      audioManager.pauseBackgroundMusic()
+
       // Play different sounds based on score
       if (score >= 80) {
         setShowConfetti(true)

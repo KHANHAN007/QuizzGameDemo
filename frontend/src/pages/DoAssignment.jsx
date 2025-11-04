@@ -219,6 +219,9 @@ export default function DoAssignment() {
       // Clear draft
       localStorage.removeItem(`assignment_${id}_draft`)
 
+      // Tắt nhạc nền khi nộp bài thành công
+      audioManager.pauseBackgroundMusic()
+
       // Play success sound
       audioManager.playSound('complete')
       message.success('Nộp bài thành công! 🎉', 3)
@@ -230,6 +233,9 @@ export default function DoAssignment() {
 
     } catch (error) {
       console.error('Submit error:', error)
+      
+      // Tắt nhạc nền khi có lỗi
+      audioManager.pauseBackgroundMusic()
       audioManager.playSound('wrong')
 
       // Handle specific error cases
