@@ -20,9 +20,9 @@ api.interceptors.request.use(
     }
 )
 
-// Add response interceptor to handle 401 errors
+// Add response interceptor to handle 401 errors and auto-unwrap data
 api.interceptors.response.use(
-    (response) => response,
+    (response) => response.data, // Auto-unwrap data for all responses
     (error) => {
         if (error.response?.status === 401) {
             // Token expired or invalid
@@ -35,78 +35,30 @@ api.interceptors.response.use(
 )
 
 // Auth APIs
-export const login = async (username, password) => {
-    const response = await api.post('/auth/login', { username, password })
-    return response.data
-}
-export const logout = async () => {
-    const response = await api.post('/auth/logout')
-    return response.data
-}
-export const getProfile = async () => {
-    const response = await api.get('/auth/profile')
-    return response.data
-}
+export const login = (username, password) => api.post('/auth/login', { username, password })
+export const logout = () => api.post('/auth/logout')
+export const getProfile = () => api.get('/auth/profile')
 
 // User APIs
-export const fetchUsers = async (role) => {
-    const response = await api.get('/users', { params: { role } })
-    return response.data
-}
-export const createUser = async (data) => {
-    const response = await api.post('/users', data)
-    return response.data
-}
+export const fetchUsers = (role) => api.get('/users', { params: { role } })
+export const createUser = (data) => api.post('/users', data)
 
 // Assignment APIs
-export const fetchAssignments = async (params) => {
-    const response = await api.get('/assignments', { params })
-    return response.data
-}
-export const fetchAssignment = async (id) => {
-    const response = await api.get(`/assignments/${id}`)
-    return response.data
-}
-export const createAssignment = async (data) => {
-    const response = await api.post('/assignments', data)
-    return response.data
-}
-export const updateAssignment = async (id, data) => {
-    const response = await api.put(`/assignments/${id}`, data)
-    return response.data
-}
-export const deleteAssignment = async (id) => {
-    const response = await api.delete(`/assignments/${id}`)
-    return response.data
-}
+export const fetchAssignments = (params) => api.get('/assignments', { params })
+export const fetchAssignment = (id) => api.get(`/assignments/${id}`)
+export const createAssignment = (data) => api.post('/assignments', data)
+export const updateAssignment = (id, data) => api.put(`/assignments/${id}`, data)
+export const deleteAssignment = (id) => api.delete(`/assignments/${id}`)
 
 // Submission APIs
-export const fetchSubmissions = async (params) => {
-    const response = await api.get('/submissions', { params })
-    return response.data
-}
-export const fetchSubmission = async (id) => {
-    const response = await api.get(`/submissions/${id}`)
-    return response.data
-}
-export const submitAssignment = async (data) => {
-    const response = await api.post('/submissions', data)
-    return response.data
-}
+export const fetchSubmissions = (params) => api.get('/submissions', { params })
+export const fetchSubmission = (id) => api.get(`/submissions/${id}`)
+export const submitAssignment = (data) => api.post('/submissions', data)
 
 // Question Sets
-export const fetchQuestionSets = async () => {
-    const response = await api.get('/sets')
-    return response.data
-}
-export const fetchQuestionSet = async (id) => {
-    const response = await api.get(`/sets/${id}`)
-    return response.data
-}
-export const createQuestionSet = async (data) => {
-    const response = await api.post('/sets', data)
-    return response.data
-}
+export const fetchQuestionSets = () => api.get('/sets')
+export const fetchQuestionSet = (id) => api.get(`/sets/${id}`)
+export const createQuestionSet = (data) => api.post('/sets', data)
 export const updateQuestionSet = (id, data) => api.put(`/sets/${id}`, data)
 export const deleteQuestionSet = (id) => api.delete(`/sets/${id}`)
 
