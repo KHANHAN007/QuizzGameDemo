@@ -20,22 +20,35 @@ export default function Login() {
 
   async function handleLogin(values) {
     setLoading(true)
-    const result = await login(values.username, values.password)
-    setLoading(false)
-
-    if (result.success) {
-      message.success(`Chào mừng, ${result.user.fullName}!`)
-
-      // Redirect based on role
-      if (result.user.role === 'teacher') {
-        navigate('/teacher/dashboard')
-      } else if (result.user.role === 'student') {
-        navigate('/student/dashboard')
+    
+    try {
+      console.log('🔐 Attempting login:', { username: values.username })
+      
+      const result = await login(values.username, values.password)
+      
+      console.log('✅ Login result:', result)
+      
+      if (result.success) {
+        message.success(`Chào mừng, ${result.user.fullName}!`, 3)
+        
+        // Redirect based on role
+        if (result.user.role === 'teacher') {
+          navigate('/teacher/dashboard')
+        } else if (result.user.role === 'student') {
+          navigate('/student/dashboard')
+        } else {
+          navigate('/')
+        }
       } else {
-        navigate('/')
+        console.error('❌ Login failed:', result.error)
+        message.error(result.error || 'Đăng nhập thất bại', 5)
       }
-    } else {
-      message.error(result.error || 'Đăng nhập thất bại')
+    } catch (error) {
+      console.error('❌ Login exception:', error)
+      const errorMsg = error.response?.data?.error || error.message || 'Lỗi kết nối server'
+      message.error(`Lỗi: ${errorMsg}`, 5)
+    } finally {
+      setLoading(false)
     }
   }
 

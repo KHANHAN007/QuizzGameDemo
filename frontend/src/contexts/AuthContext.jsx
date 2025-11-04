@@ -26,10 +26,25 @@ export function AuthProvider({ children }) {
 
   const login = async (username, password) => {
     try {
+      console.log('🔑 AuthContext: Starting login...', { username })
+      
       const response = await apiLogin(username, password)
+      
+      console.log('📦 AuthContext: API response:', response)
       
       // apiLogin now returns data directly
       const { token: newToken, user: newUser } = response
+      
+      if (!newToken || !newUser) {
+        console.error('❌ AuthContext: Invalid response format:', response)
+        throw new Error('Invalid response from server')
+      }
+      
+      console.log('✅ AuthContext: Login successful', { 
+        username: newUser.username, 
+        role: newUser.role,
+        tokenLength: newToken?.length 
+      })
       
       // Save to state
       setToken(newToken)
@@ -44,10 +59,14 @@ export function AuthProvider({ children }) {
       
       return { success: true, user: newUser }
     } catch (error) {
-      console.error('Login error:', error)
+      console.error('❌ AuthContext: Login error:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      })
       return {
         success: false,
-        error: error.response?.data?.error || 'Login failed'
+        error: error.response?.data?.error || error.message || 'Login failed'
       }
     }
   }

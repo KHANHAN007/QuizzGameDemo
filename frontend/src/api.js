@@ -22,8 +22,22 @@ api.interceptors.request.use(
 
 // Add response interceptor to handle 401 errors and auto-unwrap data
 api.interceptors.response.use(
-    (response) => response.data, // Auto-unwrap data for all responses
+    (response) => {
+        console.log('📡 API Response:', {
+            url: response.config.url,
+            status: response.status,
+            data: response.data
+        })
+        return response.data // Auto-unwrap data for all responses
+    },
     (error) => {
+        console.error('❌ API Error:', {
+            url: error.config?.url,
+            status: error.response?.status,
+            data: error.response?.data,
+            message: error.message
+        })
+        
         if (error.response?.status === 401) {
             // Token expired or invalid
             localStorage.removeItem('token')
