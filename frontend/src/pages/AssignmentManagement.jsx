@@ -38,15 +38,15 @@ export default function AssignmentManagement() {
   const loadData = async () => {
     setLoading(true)
     try {
-      const [assignmentsRes, setsRes, studentsRes] = await Promise.all([
+      const [assignmentsData, setsData, studentsData] = await Promise.all([
         fetchAssignments(),
         fetchQuestionSets(),
         fetchUsers('student')
       ])
       
-      setAssignments(assignmentsRes.data || [])
-      setQuestionSets(setsRes.data || [])
-      setStudents(studentsRes.data || [])
+      setAssignments(assignmentsData || [])
+      setQuestionSets(setsData || [])
+      setStudents(studentsData || [])
     } catch (error) {
       message.error('Không thể tải dữ liệu: ' + error.message)
     } finally {

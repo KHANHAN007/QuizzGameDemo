@@ -12,19 +12,18 @@ import {
 } from '@ant-design/icons'
 import Confetti from 'react-confetti'
 import { fetchQuiz, gradeQuiz, checkAnswer, fetchQuestionSets } from '../api'
-
 const { Countdown } = Statistic
 
 export default function Play() {
   const navigate = useNavigate()
-  const [gameState, setGameState] = useState('select') // select, playing, result
+  const [gameState, setGameState] = useState('select')
   const [questionSets, setQuestionSets] = useState([])
   const [selectedSet, setSelectedSet] = useState(null)
   const [setSettings, setSetSettings] = useState(null)
   const [questions, setQuestions] = useState([])
   const [currentIndex, setCurrentIndex] = useState(0)
   const [answers, setAnswers] = useState({})
-  const [instantFeedback, setInstantFeedback] = useState({}) // {questionId: {isCorrect, explanation}}
+  const [instantFeedback, setInstantFeedback] = useState({})
   const [result, setResult] = useState(null)
   const [deadline, setDeadline] = useState(null)
   const [showConfetti, setShowConfetti] = useState(false)
@@ -35,8 +34,8 @@ export default function Play() {
 
   async function loadQuestionSets() {
     try {
-      const response = await fetchQuestionSets()
-      setQuestionSets(response.data)
+      const data = await fetchQuestionSets()
+      setQuestionSets(data)
     } catch (error) {
       message.error('Không thể tải danh sách câu hỏi')
     }
@@ -49,19 +48,16 @@ export default function Play() {
     }
 
     try {
-      const response = await fetchQuiz(selectedSet)
-      // Backend already returns choices array
-      setQuestions(response.data.questions)
-      setSetSettings(response.data.setSettings) // Fixed: API returns 'setSettings' not 'settings'
+      const data = await fetchQuiz(selectedSet)
+      setQuestions(data.questions)
+      setSetSettings(data.setSettings)
       setAnswers({})
       setInstantFeedback({})
       setCurrentIndex(0)
       setResult(null)
       setGameState('playing')
-
-      // Set deadline if timePerQuestion > 0
-      if (response.data.setSettings?.timePerQuestion > 0) {
-        const totalTime = response.data.setSettings.timePerQuestion * response.data.questions.length
+      if (data.setSettings?.timePerQuestion > 0) {
+        const totalTime = data.setSettings.timePerQuestion * data.questions.length
         setDeadline(Date.now() + totalTime * 1000)
       } else {
         setDeadline(null)
@@ -74,21 +70,17 @@ export default function Play() {
 
   async function submitQuiz() {
     try {
-      // Transform answers object to array format for backend
-      // Send -1 for unanswered questions
       const answersArray = questions.map(question => ({
         id: question.id,
         answerIndex: answers[question.id] !== undefined ? answers[question.id] : -1
       }))
 
-      const response = await gradeQuiz(answersArray)
-      const { correct, total, score, details } = response.data
-
-      // Backend already returns enriched details with all needed data
+      const data = await gradeQuiz(answersArray)
+      const { correct, total, score, details } = data
       const enrichedDetails = details.map(detail => ({
         ...detail,
-        questionId: detail.id, // For compatibility
-        correct: detail.isCorrect // For compatibility
+        questionId: detail.id, 
+        correct: detail.isCorrect
       }))
 
       setResult({
@@ -121,13 +113,13 @@ export default function Play() {
     // If instant feedback is enabled, check answer immediately
     if (setSettings?.showInstantFeedback) {
       try {
-        const response = await checkAnswer(questionId, choiceIndex)
+        const data = await checkAnswer(questionId, choiceIndex)
         setInstantFeedback(prev => ({
           ...prev,
           [questionId]: {
-            isCorrect: response.data.isCorrect,
-            correctIndex: response.data.correctIndex,
-            explanation: response.data.explanation
+            isCorrect: data.isCorrect,
+            correctIndex: data.correctIndex,
+            explanation: data.explanation
           }
         }))
       } catch (error) {
@@ -400,7 +392,6 @@ export default function Play() {
     )
   }
 
-  // Result screen
   if (gameState === 'result' && result) {
     const { total, correct, score, details } = result
     const passed = score >= 60
