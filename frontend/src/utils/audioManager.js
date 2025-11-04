@@ -64,12 +64,13 @@ class AudioManager {
         if (this.isMuted) return
 
         const soundUrls = {
-            correct: 'https://assets.mixkit.co/active_storage/sfx/2018/2018-preview.mp3', // Success bell
-            wrong: 'https://assets.mixkit.co/active_storage/sfx/2955/2955-preview.mp3', // Error buzzer
-            submit: 'https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3', // Success notification
-            highScore: 'https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3', // High score celebration (>=80%)
-            lowScore: 'https://assets.mixkit.co/active_storage/sfx/2955/2955-preview.mp3', // Low score (<80%)
-            complete: 'https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3' // Completion fanfare
+            // Chỉ dùng 3 file local
+            correct: '/music/Am_thanh_chuc_mung_chien_thang-www_tiengdong_com.mp3', // Trả lời đúng
+            wrong: '/music/Am_thanh_tra_loi_sai-www_tiengdong_com.mp3', // Trả lời sai
+            submit: '/music/Am_thanh_chuc_mung_chien_thang-www_tiengdong_com.mp3', // Nộp bài
+            highScore: '/music/Am_thanh_chuc_mung_chien_thang-www_tiengdong_com.mp3', // Điểm cao >=80%
+            lowScore: '/music/Am_thanh_tra_loi_sai-www_tiengdong_com.mp3', // Điểm thấp <80%
+            complete: '/music/Am_thanh_chuc_mung_chien_thang-www_tiengdong_com.mp3' // Hoàn thành
         }
 
         const url = soundUrls[soundName]

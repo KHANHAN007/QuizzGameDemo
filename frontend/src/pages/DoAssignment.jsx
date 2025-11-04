@@ -54,8 +54,8 @@ export default function DoAssignment() {
   useEffect(() => {
     loadAssignment()
 
-    // Load upbeat background music for quiz
-    audioManager.loadBackgroundMusic('https://cdn.pixabay.com/download/audio/2022/03/10/audio_4a1d1681d5.mp3')
+    // Load local background music for quiz
+    audioManager.loadBackgroundMusic('/music/quiz-master-382651.mp3')
 
     return () => {
       if (autoSaveTimer) clearInterval(autoSaveTimer)

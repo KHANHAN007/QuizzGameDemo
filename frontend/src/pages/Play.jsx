@@ -68,23 +68,23 @@ export default function Play() {
       setCurrentIndex(0)
       setResult(null)
       setGameState('playing')
-      
-      // Start upbeat background music
-      audioManager.loadBackgroundMusic('https://cdn.pixabay.com/download/audio/2022/03/10/audio_4a1d1681d5.mp3')
-      
+
+      // Start local background music - quiz-master
+      audioManager.loadBackgroundMusic('/music/quiz-master-382651.mp3')
+
       if (data.setSettings?.timePerQuestion > 0) {
         const totalTime = data.setSettings.timePerQuestion * data.questions.length
         setDeadline(Date.now() + totalTime * 1000)
       } else {
         setDeadline(null)
       }
-      
+
       // Bỏ âm thanh click
     } catch (error) {
       message.error('Không thể tải câu hỏi')
       console.error(error)
     }
-  }  async function submitQuiz() {
+  } async function submitQuiz() {
     try {
       const answersArray = questions.map(question => ({
         id: question.id,
