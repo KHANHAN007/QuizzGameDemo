@@ -720,8 +720,388 @@ async function deleteQuestionSet(env, id) {
     }
 }
 
-// Continue with Questions, Quiz, CSV handlers... (keeping existing code)
-// Due to character limit, importing from original file
+// ============================================
+// QUESTIONS HANDLERS
+// ============================================
+
+async function getQuestions(env, url) {
+    try {
+        const setId = url.searchParams.get('setId');
+
+        let query = 'SELECT * FROM questions';
+        let stmt;
+
+        if (setId) {
+            query += ' WHERE setId = ? ORDER BY id DESC';
+            stmt = env.DB.prepare(query).bind(setId);
+        } else {
+            query += ' ORDER BY id DESC';
+            stmt = env.DB.prepare(query);
+        }
+
+        const { results } = await stmt.all();
+
+        const questions = results.map(q => ({
+            id: q.id,
+            setId: q.setId,
+            text: q.text,
+            choices: [q.choice1, q.choice2, q.choice3, q.choice4],
+            correctIndex: q.correctIndex,
+            explanation: q.explanation,
+            createdAt: q.createdAt
+        }));
+
+        return jsonResponse(questions);
+    } catch (error) {
+        return errorResponse(error.message);
+    }
+}
+
+async function getQuestion(env, id) {
+    try {
+        const q = await env.DB.prepare('SELECT * FROM questions WHERE id = ?')
+            .bind(id)
+            .first();
+
+        if (!q) {
+            return errorResponse('Not found', 404);
+        }
+
+        const question = {
+            id: q.id,
+            setId: q.setId,
+            text: q.text,
+            choices: [q.choice1, q.choice2, q.choice3, q.choice4],
+            correctIndex: q.correctIndex,
+            explanation: q.explanation
+        };
+
+        return jsonResponse(question);
+    } catch (error) {
+        return errorResponse(error.message);
+    }
+}
+
+async function createQuestion(env, data) {
+    try {
+        const { setId, text, choices, correctIndex, explanation } = data;
+
+        if (!text || !choices || choices.length < 4 || correctIndex === undefined) {
+            return errorResponse('Invalid data', 400);
+        }
+
+        const result = await env.DB.prepare(`
+            INSERT INTO questions (setId, text, choice1, choice2, choice3, choice4, correctIndex, explanation)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        `).bind(
+            setId || 1,
+            text,
+            choices[0],
+            choices[1],
+            choices[2],
+            choices[3],
+            correctIndex,
+            explanation || ''
+        ).run();
+
+        const newQuestion = await env.DB.prepare('SELECT * FROM questions WHERE id = ?')
+            .bind(result.meta.last_row_id)
+            .first();
+
+        const question = {
+            id: newQuestion.id,
+            setId: newQuestion.setId,
+            text: newQuestion.text,
+            choices: [newQuestion.choice1, newQuestion.choice2, newQuestion.choice3, newQuestion.choice4],
+            correctIndex: newQuestion.correctIndex,
+            explanation: newQuestion.explanation
+        };
+
+        return jsonResponse(question, 201);
+    } catch (error) {
+        return errorResponse(error.message);
+    }
+}
+
+async function updateQuestion(env, id, data) {
+    try {
+        const { setId, text, choices, correctIndex, explanation } = data;
+
+        const current = await env.DB.prepare('SELECT * FROM questions WHERE id = ?')
+            .bind(id)
+            .first();
+        
+        if (!current) {
+            return errorResponse('Question not found', 404);
+        }
+
+        await env.DB.prepare(`
+            UPDATE questions 
+            SET setId = ?, text = ?, choice1 = ?, choice2 = ?, choice3 = ?, choice4 = ?, 
+                correctIndex = ?, explanation = ?
+            WHERE id = ?
+        `).bind(
+            setId !== undefined ? setId : current.setId,
+            text,
+            choices[0],
+            choices[1],
+            choices[2],
+            choices[3],
+            correctIndex,
+            explanation !== undefined ? explanation : current.explanation,
+            id
+        ).run();
+
+        const updated = await env.DB.prepare('SELECT * FROM questions WHERE id = ?')
+            .bind(id)
+            .first();
+
+        const question = {
+            id: updated.id,
+            setId: updated.setId,
+            text: updated.text,
+            choices: [updated.choice1, updated.choice2, updated.choice3, updated.choice4],
+            correctIndex: updated.correctIndex,
+            explanation: updated.explanation
+        };
+
+        return jsonResponse(question);
+    } catch (error) {
+        return errorResponse(error.message);
+    }
+}
+
+async function deleteQuestion(env, id) {
+    try {
+        await env.DB.prepare('DELETE FROM questions WHERE id = ?')
+            .bind(id)
+            .run();
+
+        return jsonResponse({ success: true });
+    } catch (error) {
+        return errorResponse(error.message);
+    }
+}
+
+// ============================================
+// QUIZ HANDLERS
+// ============================================
+
+async function getQuiz(env, url) {
+    try {
+        const setId = url.searchParams.get('setId');
+        const count = parseInt(url.searchParams.get('count') || '5', 10);
+
+        let query = 'SELECT * FROM questions';
+        let stmt;
+
+        if (setId) {
+            query += ' WHERE setId = ? ORDER BY RANDOM() LIMIT ?';
+            stmt = env.DB.prepare(query).bind(setId, count);
+        } else {
+            query += ' ORDER BY RANDOM() LIMIT ?';
+            stmt = env.DB.prepare(query).bind(count);
+        }
+
+        const { results } = await stmt.all();
+
+        // Get set settings if setId provided
+        let setSettings = null;
+        if (setId) {
+            setSettings = await env.DB.prepare('SELECT * FROM question_sets WHERE id = ?')
+                .bind(setId)
+                .first();
+        }
+
+        const questions = results.map(q => ({
+            id: q.id,
+            text: q.text,
+            choices: [q.choice1, q.choice2, q.choice3, q.choice4],
+            explanation: q.explanation
+            // Don't send correctIndex to client!
+        }));
+
+        return jsonResponse({
+            setSettings,
+            questions
+        });
+    } catch (error) {
+        return errorResponse(error.message);
+    }
+}
+
+async function gradeQuiz(env, data) {
+    try {
+        const { answers } = data;
+
+        if (!answers || !Array.isArray(answers)) {
+            return errorResponse('Invalid data', 400);
+        }
+
+        let correct = 0;
+        const details = [];
+
+        for (const answer of answers) {
+            const q = await env.DB.prepare('SELECT * FROM questions WHERE id = ?')
+                .bind(answer.id)
+                .first();
+
+            if (!q) {
+                details.push({ id: answer.id, isCorrect: false });
+                continue;
+            }
+
+            const isCorrect = q.correctIndex === answer.answerIndex;
+            if (isCorrect) correct++;
+
+            details.push({
+                id: answer.id,
+                questionText: q.text,
+                correctIndex: q.correctIndex,
+                correctAnswer: [q.choice1, q.choice2, q.choice3, q.choice4][q.correctIndex],
+                yourAnswer: [q.choice1, q.choice2, q.choice3, q.choice4][answer.answerIndex] || 'Not answered',
+                yourAnswerIndex: answer.answerIndex,
+                isCorrect,
+                explanation: q.explanation
+            });
+        }
+
+        return jsonResponse({
+            total: answers.length,
+            correct,
+            score: Math.round((correct / answers.length) * 100),
+            details
+        });
+    } catch (error) {
+        return errorResponse(error.message);
+    }
+}
+
+async function checkAnswer(env, data) {
+    try {
+        const { questionId, answerIndex } = data;
+
+        const q = await env.DB.prepare('SELECT * FROM questions WHERE id = ?')
+            .bind(questionId)
+            .first();
+
+        if (!q) {
+            return errorResponse('Question not found', 404);
+        }
+
+        const isCorrect = q.correctIndex === answerIndex;
+
+        return jsonResponse({
+            isCorrect,
+            correctIndex: q.correctIndex,
+            correctAnswer: [q.choice1, q.choice2, q.choice3, q.choice4][q.correctIndex],
+            explanation: q.explanation
+        });
+    } catch (error) {
+        return errorResponse(error.message);
+    }
+}
+
+// ============================================
+// CSV HANDLERS
+// ============================================
+
+async function importCSV(env, formData) {
+    try {
+        const file = formData.get('file');
+        const setId = formData.get('setId') || '1';
+
+        if (!file) {
+            return errorResponse('No file uploaded', 400);
+        }
+
+        const content = await file.text();
+        const lines = content.split('\n');
+
+        let imported = 0;
+
+        for (let i = 1; i < lines.length; i++) {
+            const line = lines[i].trim();
+            if (!line) continue;
+
+            const matches = line.match(/(".*?"|[^,]+)(?=\s*,|\s*$)/g);
+            if (!matches || matches.length < 6) continue;
+
+            const values = matches.map(v => v.replace(/^"|"$/g, '').trim());
+            const [question, choice1, choice2, choice3, choice4, correctIndex, explanation = ''] = values;
+
+            if (question && choice1 && correctIndex !== undefined) {
+                await env.DB.prepare(`
+                    INSERT INTO questions (setId, text, choice1, choice2, choice3, choice4, correctIndex, explanation)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                `).bind(
+                    setId,
+                    question,
+                    choice1 || '',
+                    choice2 || '',
+                    choice3 || '',
+                    choice4 || '',
+                    parseInt(correctIndex, 10),
+                    explanation || ''
+                ).run();
+
+                imported++;
+            }
+        }
+
+        return jsonResponse({ success: true, imported });
+    } catch (error) {
+        return errorResponse(error.message);
+    }
+}
+
+async function exportCSV(env, url) {
+    try {
+        const setId = url.searchParams.get('setId');
+
+        let query = 'SELECT * FROM questions';
+        let stmt;
+
+        if (setId) {
+            query += ' WHERE setId = ?';
+            stmt = env.DB.prepare(query).bind(setId);
+        } else {
+            stmt = env.DB.prepare(query);
+        }
+
+        const { results } = await stmt.all();
+
+        let csv = 'question,choice1,choice2,choice3,choice4,correctIndex,explanation\n';
+
+        for (const q of results) {
+            const row = [
+                `"${q.text}"`,
+                `"${q.choice1}"`,
+                `"${q.choice2}"`,
+                `"${q.choice3}"`,
+                `"${q.choice4}"`,
+                q.correctIndex,
+                `"${q.explanation || ''}"`
+            ].join(',');
+
+            csv += row + '\n';
+        }
+
+        return new Response('\uFEFF' + csv, {
+            headers: {
+                'Content-Type': 'text/csv; charset=utf-8',
+                'Content-Disposition': 'attachment; filename=questions.csv',
+                ...corsHeaders
+            }
+        });
+    } catch (error) {
+        return errorResponse(error.message);
+    }
+}
+
+// ============================================
+// MAIN ROUTER
+// ============================================
 
 export default {
     async fetch(request, env, ctx) {
@@ -835,7 +1215,66 @@ export default {
                 return await deleteQuestionSet(env, id);
             }
 
-            // Health check
+            // ============================================
+            // QUESTIONS ROUTES (Public - no auth for guest mode)
+            // ============================================
+            if (path === '/api/questions' && method === 'GET') {
+                return await getQuestions(env, url);
+            }
+
+            if (path.match(/^\/api\/questions\/\d+$/) && method === 'GET') {
+                const id = path.split('/')[3];
+                return await getQuestion(env, id);
+            }
+
+            if (path === '/api/questions' && method === 'POST') {
+                const data = await request.json();
+                return await createQuestion(env, data);
+            }
+
+            if (path.match(/^\/api\/questions\/\d+$/) && method === 'PUT') {
+                const id = path.split('/')[3];
+                const data = await request.json();
+                return await updateQuestion(env, id, data);
+            }
+
+            if (path.match(/^\/api\/questions\/\d+$/) && method === 'DELETE') {
+                const id = path.split('/')[3];
+                return await deleteQuestion(env, id);
+            }
+
+            // ============================================
+            // QUIZ & GRADING ROUTES (Public - no auth for guest mode)
+            // ============================================
+            if (path === '/api/quiz' && method === 'GET') {
+                return await getQuiz(env, url);
+            }
+
+            if (path === '/api/grade' && method === 'POST') {
+                const data = await request.json();
+                return await gradeQuiz(env, data);
+            }
+
+            if (path === '/api/check-answer' && method === 'POST') {
+                const data = await request.json();
+                return await checkAnswer(env, data);
+            }
+
+            // ============================================
+            // CSV ROUTES (Public - no auth for guest mode)
+            // ============================================
+            if (path === '/api/import-csv' && method === 'POST') {
+                const formData = await request.formData();
+                return await importCSV(env, formData);
+            }
+
+            if (path === '/api/export-csv' && method === 'GET') {
+                return await exportCSV(env, url);
+            }
+
+            // ============================================
+            // HEALTH CHECK
+            // ============================================
             if (path === '/api/health' || path === '/health') {
                 return jsonResponse({
                     status: 'ok',
@@ -844,9 +1283,6 @@ export default {
                     timestamp: new Date().toISOString()
                 });
             }
-
-            // NOTE: Other routes (questions, quiz, grade, csv) kept as-is from original
-            // Import them or keep existing implementation
 
             return errorResponse('Not found', 404);
 

@@ -10,7 +10,7 @@
 INSERT INTO users (username, password, fullName, email, role, class, active)
 VALUES 
   -- Teacher 1: Cô Hương (username: teacher1, password: password123)
-  ('teacher1', 'ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f', 'Admin', 'admin@school.edu.vn', 'teacher', NULL, 1),
+  ('teacher1', 'ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f', 'Admin', 'huong.nguyen@school.edu.vn', 'teacher', NULL, 1),
   
   -- Teacher 2: Thầy Minh (username: teacher2, password: password123)
   ('teacher2', 'ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f', 'Trần Văn Minh', 'minh.tran@school.edu.vn', 'teacher', NULL, 1),
