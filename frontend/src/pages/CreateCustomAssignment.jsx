@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
     Card, Form, Input, DatePicker, Button, Space, message, Steps,
-    Radio, InputNumber, Divider, Typography, List, Modal, Tag, Row, Col, Switch
+    Radio, InputNumber, Divider, Typography, List, Modal, Tag, Row, Col, Switch, Upload
 } from 'antd'
 import {
     PlusOutlined, DeleteOutlined, ArrowLeftOutlined, SaveOutlined,
-    CheckCircleOutlined, EditOutlined, FileTextOutlined
+    CheckCircleOutlined, EditOutlined, FileTextOutlined, UploadOutlined, DownloadOutlined
 } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { api, fetchUsers } from '../api'
@@ -62,6 +62,62 @@ export default function CreateCustomAssignment() {
         } finally {
             setLoading(false)
         }
+    }
+
+    const handleExportCSV = async () => {
+        if (!id) {
+            message.error('Vui lòng lưu bài tập trước khi xuất CSV')
+            return
+        }
+        try {
+            const response = await fetch(`${api.baseURL}/assignments/${id}/export-csv`, {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            })
+            if (!response.ok) throw new Error('Export failed')
+            
+            const blob = await response.blob()
+            const url = window.URL.createObjectURL(blob)
+            const a = document.createElement('a')
+            a.href = url
+            a.download = `assignment-${id}-questions.csv`
+            a.click()
+            window.URL.revokeObjectURL(url)
+            message.success('Đã xuất file CSV thành công')
+        } catch (error) {
+            message.error('Không thể xuất CSV: ' + error.message)
+        }
+    }
+
+    const handleImportCSV = async (file) => {
+        if (!id) {
+            message.error('Vui lòng lưu bài tập trước khi nhập CSV')
+            return false
+        }
+        
+        const formData = new FormData()
+        formData.append('file', file)
+        
+        try {
+            const response = await fetch(`${api.baseURL}/assignments/${id}/import-csv`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: formData
+            })
+            
+            if (!response.ok) throw new Error('Import failed')
+            
+            const result = await response.json()
+            message.success(`Đã nhập ${result.questions.length} câu hỏi từ CSV`)
+            loadAssignment() // Reload to show imported questions
+        } catch (error) {
+            message.error('Không thể nhập CSV: ' + error.message)
+        }
+        
+        return false // Prevent auto upload
     }
 
     const handleAddQuestion = () => {
@@ -278,17 +334,41 @@ export default function CreateCustomAssignment() {
                     {currentStep === 1 && (
                         <>
                             <div style={{ marginBottom: 16 }}>
-                                <Button
-                                    type="primary"
-                                    icon={<PlusOutlined />}
-                                    onClick={handleAddQuestion}
-                                    size="large"
-                                >
-                                    Thêm câu hỏi
-                                </Button>
-                                <Text type="secondary" style={{ marginLeft: 16 }}>
-                                    Tổng: {questions.length} câu hỏi
-                                </Text>
+                                <Space>
+                                    <Button
+                                        type="primary"
+                                        icon={<PlusOutlined />}
+                                        onClick={handleAddQuestion}
+                                        size="large"
+                                    >
+                                        Thêm câu hỏi
+                                    </Button>
+                                    
+                                    <Upload
+                                        accept=".csv"
+                                        beforeUpload={handleImportCSV}
+                                        showUploadList={false}
+                                    >
+                                        <Button icon={<UploadOutlined />} size="large">
+                                            Nhập từ CSV
+                                        </Button>
+                                    </Upload>
+                                    
+                                    <Button 
+                                        icon={<DownloadOutlined />} 
+                                        onClick={handleExportCSV}
+                                        size="large"
+                                        disabled={!id}
+                                    >
+                                        Xuất CSV
+                                    </Button>
+                                </Space>
+                                
+                                <div style={{ marginTop: 8 }}>
+                                    <Text type="secondary">
+                                        Tổng: {questions.length} câu hỏi
+                                    </Text>
+                                </div>
                             </div>
 
                             <List

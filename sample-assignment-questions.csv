@@ -1,0 +1,6 @@
+type,question,choice1,choice2,choice3,choice4,correct,points,explanation
+multiple_choice,"Thủ đô của Việt Nam là gì?","Hà Nội","TP Hồ Chí Minh","Đà Nẵng","Huế",0,10,"Hà Nội là thủ đô của nước Cộng hòa Xã hội chủ nghĩa Việt Nam"
+multiple_choice,"2 + 2 = ?","3","4","5","6",1,10,"Phép cộng cơ bản"
+essay,"Hãy viết một đoạn văn ngắn về gia đình của bạn (tối thiểu 100 từ)","","","","",0,20,"Yêu cầu học sinh trình bày về gia đình"
+multiple_choice,"Điền từ thích hợp: I ___ a student","am","is","are","be",0,5,"Động từ to be với chủ ngữ I"
+essay,"Giải thích tại sao cần bảo vệ môi trường?","","","","",0,15,"Câu hỏi tự luận về môi trường"

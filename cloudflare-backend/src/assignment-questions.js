@@ -1,6 +1,24 @@
 // Assignment Questions API Handler
 // Handle CRUD operations for assignment questions (multiple choice & essay)
 
+import { requireAuth, requireRole } from './auth.js';
+
+// JSON response helper
+function jsonResponse(data, status = 200) {
+    return new Response(JSON.stringify(data), {
+        status,
+        headers: { 
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*'
+        },
+    });
+}
+
+// Error response helper
+function errorResponse(message, status = 500) {
+    return jsonResponse({ error: message }, status);
+}
+
 // Get all questions for an assignment
 export async function getAssignmentQuestions(env, request, assignmentId) {
     try {
@@ -333,31 +351,12 @@ export async function exportAssignmentQuestionsCSV(env, request, assignmentId) {
         return new Response(csv, {
             headers: {
                 'Content-Type': 'text/csv',
-                'Content-Disposition': `attachment; filename="assignment-${assignmentId}-questions.csv"`
+                'Content-Disposition': `attachment; filename="assignment-${assignmentId}-questions.csv"`,
+                'Access-Control-Allow-Origin': '*'
             }
         });
     } catch (error) {
         console.error('exportAssignmentQuestionsCSV error:', error);
         return errorResponse(error.message);
     }
-}
-
-// Helper functions (assuming these exist in main index.js)
-function jsonResponse(data, status = 200) {
-    return new Response(JSON.stringify(data), {
-        status,
-        headers: { 'Content-Type': 'application/json' }
-    });
-}
-
-function errorResponse(message, status = 500) {
-    return jsonResponse({ error: message }, status);
-}
-
-async function requireAuth(request, env) {
-    // Implementation in main index.js
-}
-
-function requireRole(user, roles) {
-    // Implementation in main index.js
 }
