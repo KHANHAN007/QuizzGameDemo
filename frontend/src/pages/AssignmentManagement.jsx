@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Card, Table, Button, Modal, Form, Input, Select, DatePicker,
-  message, Space, Tag, Popconfirm, Typography, Switch
+  message, Space, Tag, Popconfirm, Typography, Switch, Row, Col
 } from 'antd'
 import {
   PlusOutlined, EditOutlined, DeleteOutlined, EyeOutlined,
-  FileTextOutlined
+  FileTextOutlined, SearchOutlined, FilterOutlined
 } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import {
@@ -25,15 +25,55 @@ export default function AssignmentManagement() {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
   const [assignments, setAssignments] = useState([])
+  const [filteredAssignments, setFilteredAssignments] = useState([])
   const [questionSets, setQuestionSets] = useState([])
   const [students, setStudents] = useState([])
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingAssignment, setEditingAssignment] = useState(null)
+  const [searchText, setSearchText] = useState('')
+  const [statusFilter, setStatusFilter] = useState('all')
+  const [setFilter, setSetFilter] = useState('all')
   const [form] = Form.useForm()
 
   useEffect(() => {
     loadData()
   }, [])
+
+  useEffect(() => {
+    applyFilters()
+  }, [assignments, searchText, statusFilter, setFilter])
+
+  const applyFilters = () => {
+    let filtered = [...assignments]
+
+    // Search
+    if (searchText) {
+      const search = searchText.toLowerCase()
+      filtered = filtered.filter(a =>
+        a.title?.toLowerCase().includes(search) ||
+        a.description?.toLowerCase().includes(search) ||
+        a.questionSetName?.toLowerCase().includes(search)
+      )
+    }
+
+    // Status filter
+    if (statusFilter !== 'all') {
+      const now = dayjs()
+      filtered = filtered.filter(a => {
+        const dueDate = dayjs.unix(a.dueDate)
+        if (statusFilter === 'active') return dueDate.isAfter(now)
+        if (statusFilter === 'overdue') return dueDate.isBefore(now)
+        return true
+      })
+    }
+
+    // Question set filter
+    if (setFilter !== 'all') {
+      filtered = filtered.filter(a => a.questionSetId === parseInt(setFilter))
+    }
+
+    setFilteredAssignments(filtered)
+  }
 
   const loadData = async () => {
     setLoading(true)
@@ -205,9 +245,59 @@ export default function AssignmentManagement() {
           </Button>
         </div>
 
+        {/* Filters */}
+        <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+          <Col xs={24} md={8}>
+            <Input
+              placeholder="Tìm kiếm bài tập..."
+              prefix={<SearchOutlined />}
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              allowClear
+              size="large"
+            />
+          </Col>
+          <Col xs={24} sm={12} md={8}>
+            <Select
+              style={{ width: '100%' }}
+              size="large"
+              value={statusFilter}
+              onChange={setStatusFilter}
+              placeholder="Lọc theo trạng thái"
+              suffixIcon={<FilterOutlined />}
+            >
+              <Select.Option value="all">Tất cả trạng thái</Select.Option>
+              <Select.Option value="active">Đang hoạt động</Select.Option>
+              <Select.Option value="overdue">Quá hạn</Select.Option>
+            </Select>
+          </Col>
+          <Col xs={24} sm={12} md={8}>
+            <Select
+              style={{ width: '100%' }}
+              size="large"
+              value={setFilter}
+              onChange={setSetFilter}
+              placeholder="Lọc theo bộ câu hỏi"
+              suffixIcon={<FilterOutlined />}
+            >
+              <Select.Option value="all">Tất cả bộ câu hỏi</Select.Option>
+              {questionSets.map(set => (
+                <Select.Option key={set.id} value={set.id}>
+                  {set.name}
+                </Select.Option>
+              ))}
+            </Select>
+          </Col>
+        </Row>
+
+        <div style={{ marginBottom: 16, color: '#666' }}>
+          <FilterOutlined style={{ marginRight: 8 }} />
+          Tìm thấy <strong>{filteredAssignments.length}</strong> bài tập
+        </div>
+
         <Table
           columns={columns}
-          dataSource={assignments}
+          dataSource={filteredAssignments}
           rowKey="id"
           loading={loading}
           pagination={{

@@ -228,7 +228,8 @@ async function getAssignments(env, request, url) {
             query = `
                 SELECT a.*, qs.name as questionSetName, u.fullName as teacherName,
                     s.id as submissionId, s.status as submissionStatus, s.score as submissionScore,
-                    s.attemptNumber
+                    s.attemptNumber,
+                    (SELECT COUNT(*) FROM submissions WHERE assignmentId = a.id AND studentId = ?) as attemptCount
                 FROM assignments a
                 INNER JOIN assignment_students ast ON a.id = ast.assignmentId
                 LEFT JOIN question_sets qs ON a.questionSetId = qs.id
@@ -241,7 +242,7 @@ async function getAssignments(env, request, url) {
                     )
                 WHERE ast.studentId = ? AND a.status = 'active'
             `;
-            params = [user.id, user.id, user.id];
+            params = [user.id, user.id, user.id, user.id];
 
             if (today === 'true') {
                 const todayStart = new Date();
@@ -508,10 +509,18 @@ async function getSubmission(env, request, id) {
         if (authResult.error) return errorResponse(authResult.error, authResult.status);
 
         const submission = await env.DB.prepare(`
-            SELECT s.*, u.fullName as studentName, u.class, a.title as assignmentTitle, a.teacherId
+            SELECT 
+                s.*, 
+                u.fullName as studentName, 
+                u.class, 
+                a.title as assignmentTitle, 
+                a.teacherId,
+                a.allowRetake,
+                teacher.fullName as teacherName
             FROM submissions s
             INNER JOIN users u ON s.studentId = u.id
             INNER JOIN assignments a ON s.assignmentId = a.id
+            INNER JOIN users teacher ON a.teacherId = teacher.id
             WHERE s.id = ?
         `).bind(id).first();
 
@@ -527,15 +536,65 @@ async function getSubmission(env, request, id) {
             return errorResponse('Forbidden', 403);
         }
 
-        // Get answers
+        // Get answers with question details
         const { results: answers } = await env.DB.prepare(`
-            SELECT * FROM submission_answers WHERE submissionId = ? ORDER BY id
+            SELECT 
+                sa.questionId,
+                sa.questionText,
+                sa.selectedAnswer,
+                sa.correctAnswer,
+                sa.isCorrect,
+                sa.timeTaken,
+                q.explanation,
+                q.choice1,
+                q.choice2,
+                q.choice3,
+                q.choice4
+            FROM submission_answers sa
+            INNER JOIN questions q ON sa.questionId = q.id
+            WHERE sa.submissionId = ?
+            ORDER BY sa.id
         `).bind(id).all();
 
-        submission.answers = answers;
+        // Parse options - support both old schema (choice1-4) and new schema (options JSON)
+        const parsedAnswers = answers.map(answer => {
+            try {
+                // Build options array from choice1-4
+                const options = [
+                    answer.choice1,
+                    answer.choice2,
+                    answer.choice3,
+                    answer.choice4
+                ];
+
+                return {
+                    questionId: answer.questionId,
+                    questionText: answer.questionText,
+                    selectedAnswer: answer.selectedAnswer,
+                    correctAnswer: answer.correctAnswer,
+                    isCorrect: answer.isCorrect,
+                    timeTaken: answer.timeTaken,
+                    explanation: answer.explanation,
+                    options,
+                    studentAnswer: options[answer.selectedAnswer] || '',
+                    correctAnswerText: options[answer.correctAnswer] || ''
+                };
+            } catch (e) {
+                console.error('Error parsing answer:', e, answer);
+                return {
+                    ...answer,
+                    options: [],
+                    studentAnswer: '',
+                    correctAnswerText: ''
+                };
+            }
+        });
+
+        submission.answers = parsedAnswers;
 
         return jsonResponse(submission);
     } catch (error) {
+        console.error('getSubmission error:', error);
         return errorResponse(error.message);
     }
 }

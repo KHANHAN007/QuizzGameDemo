@@ -9,17 +9,8 @@ export default function Login() {
   const { login, isAuthenticated, user } = useAuth()
   const [loading, setLoading] = useState(false)
 
-  // Debug: Log auth state
-  console.log('🔍 Login component render - Auth state:', {
-    isAuthenticated,
-    user: user ? { username: user.username, role: user.role } : null,
-    hasTokenInStorage: !!localStorage.getItem('token'),
-    hasUserInStorage: !!localStorage.getItem('user')
-  })
-
   // If already logged in, redirect to appropriate dashboard
   if (isAuthenticated) {
-    console.log('⚠️ Already authenticated, redirecting...', { role: user?.role })
     if (user.role === 'teacher') {
       return <Navigate to="/teacher/dashboard" replace />
     } else if (user.role === 'student') {
@@ -31,63 +22,33 @@ export default function Login() {
     setLoading(true)
 
     try {
-      console.log('🔐 Login.jsx: Attempting login:', { username: values.username })
+      console.log('🔐 Attempting login:', { username: values.username })
 
       const result = await login(values.username, values.password)
 
-      console.log('✅ Login.jsx: Login result:', result)
-      console.log('✅ Login.jsx: Result type:', typeof result)
-      console.log('✅ Login.jsx: Result keys:', Object.keys(result || {}))
+      console.log('✅ Login result:', result)
 
       if (result.success) {
-        console.log('🎉 Login.jsx: Login successful, user:', result.user)
         message.success(`Chào mừng, ${result.user.fullName}!`, 3)
 
         // Redirect based on role
         if (result.user.role === 'teacher') {
-          console.log('👉 Login.jsx: Redirecting to teacher dashboard')
           navigate('/teacher/dashboard')
         } else if (result.user.role === 'student') {
-          console.log('👉 Login.jsx: Redirecting to student dashboard')
           navigate('/student/dashboard')
         } else {
-          console.log('👉 Login.jsx: Unknown role, redirecting to home')
           navigate('/')
         }
       } else {
-        console.error('❌ Login.jsx: Login failed with error:', result.error)
-        console.error('❌ Login.jsx: Auth state should be cleared now')
-        
-        // Show error message with longer duration and prevent any navigation
-        message.error({
-          content: result.error || 'Đăng nhập thất bại',
-          duration: 5,
-          style: { marginTop: '20vh' }
-        })
-        
-        // Ensure loading state is set to false to prevent UI issues
-        setLoading(false)
-        return // Early return to prevent any further execution
+        console.error('❌ Login failed:', result.error)
+        message.error(result.error || 'Đăng nhập thất bại', 5)
       }
     } catch (error) {
-      console.error('❌ Login.jsx: Exception caught:', {
-        errorType: error.constructor.name,
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status,
-        stack: error.stack
-      })
+      console.error('❌ Login exception:', error)
       const errorMsg = error.response?.data?.error || error.message || 'Lỗi kết nối server'
-      
-      message.error({
-        content: `Lỗi: ${errorMsg}`,
-        duration: 5,
-        style: { marginTop: '20vh' }
-      })
-      
-      setLoading(false)
+      message.error(`Lỗi: ${errorMsg}`, 5)
     } finally {
-      console.log('🏁 Login.jsx: Login process completed')
+      setLoading(false)
     }
   }
 

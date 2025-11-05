@@ -1,6 +1,6 @@
 import React from 'react'
 import { Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom'
-import { Layout, Menu, Button, Dropdown, Avatar, Badge, Space, Tag } from 'antd'
+import { Layout, Menu, Button, Dropdown, Avatar, Badge, Space, Tag, Divider } from 'antd'
 import {
   TrophyOutlined,
   ToolOutlined,
@@ -25,6 +25,9 @@ import AssignmentManagement from './pages/AssignmentManagement'
 import AssignmentDetail from './pages/AssignmentDetail'
 import DoAssignment from './pages/DoAssignment'
 import AssignmentResult from './pages/AssignmentResult'
+import AssignmentHistory from './pages/AssignmentHistory'
+import TeacherAssignmentHistory from './pages/TeacherAssignmentHistory'
+import TeacherSubmissionDetail from './pages/TeacherSubmissionDetail'
 import TestAPI from './pages/TestAPI'
 
 const { Header, Content, Footer } = Layout
@@ -223,8 +226,8 @@ function AppContent() {
                     }}
                     icon={<UserOutlined />}
                   />
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center', gap:'4px' }}>
-                    <span style={{ fontWeight: 600, fontSize: '14px', display:'flex', alignItems:'center', height:'20px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center', gap: '4px' }}>
+                    <span style={{ fontWeight: 600, fontSize: '14px', display: 'flex', alignItems: 'center', height: '20px' }}>
                       {user?.fullName || user?.username}
                     </span>
                     {getRoleBadge()}
@@ -246,7 +249,7 @@ function AppContent() {
         </Header>
       )}
 
-      <Content className="app-content" style={hideNavbar ? { margin: 0, padding: 0, maxWidth: '100%' } : {}}>
+      <Content className="app-content" style={hideNavbar ? { margin: 0, padding: 0, width: '100%' } : {}}>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
@@ -286,6 +289,22 @@ function AppContent() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/teacher/assignment-history/:assignmentId/:studentId"
+            element={
+              <ProtectedRoute allowedRole="teacher">
+                <TeacherAssignmentHistory />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/teacher/submissions/:submissionId"
+            element={
+              <ProtectedRoute allowedRole="teacher">
+                <TeacherSubmissionDetail />
+              </ProtectedRoute>
+            }
+          />
 
           {/* Student Routes */}
           <Route
@@ -305,6 +324,14 @@ function AppContent() {
             }
           />
           <Route
+            path="/student/assignment-history/:assignmentId"
+            element={
+              <ProtectedRoute allowedRole="student">
+                <AssignmentHistory />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/student/submissions/:submissionId"
             element={
               <ProtectedRoute allowedRole="student">
@@ -319,6 +346,13 @@ function AppContent() {
         <Footer className="app-footer">
           <div>🎉 Quiz Fun - Học vui, chơi hay! 🎉</div>
           <div style={{ fontSize: '12px', opacity: 0.8 }}>Made with ❤️ AnDang</div>
+          <div style={{ marginTop: '60px', textAlign: 'center', color: '#999' }}>
+            <Space split={<Divider type="vertical" />}>
+              <Text type="secondary">Made with ❤️ by AnDang</Text>
+              <Text type="secondary">Version 2.0</Text>
+              <Text type="secondary">2025</Text>
+            </Space>
+          </div>
         </Footer>
       )}
     </Layout>

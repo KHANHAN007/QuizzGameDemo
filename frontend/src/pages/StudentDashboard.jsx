@@ -165,7 +165,7 @@ export default function StudentDashboard() {
         <Button
           type="default"
           icon={<TrophyOutlined />}
-          onClick={() => handleDoAssignment(assignment)}
+          onClick={() => navigate(`/student/assignment-history/${assignment.id}`)}
         >
           Xem kết quả
         </Button>
@@ -173,16 +173,16 @@ export default function StudentDashboard() {
     }
 
     if (isSubmitted && canRetake) {
-      // Đã làm và CÓ thể làm lại
+      // Đã làm và CÓ thể làm lại - xem tất cả lần làm
       return (
         <Space>
           <Button
             type="default"
             icon={<TrophyOutlined />}
-            onClick={() => navigate(`/student/submissions/${assignment.submissionId}`)}
+            onClick={() => navigate(`/student/assignment-history/${assignment.id}`)}
             size="small"
           >
-            Xem kết quả
+            Xem kết quả ({assignment.attemptCount || 1})
           </Button>
           <Button
             type="primary"
@@ -225,7 +225,7 @@ export default function StudentDashboard() {
       </div>
 
       <Row gutter={16} style={{ marginBottom: 24, width: '100%' }}>
-        <Col xs={24} sm={12} md={6} style={{ marginBottom: 16, display: 'flex', paddingLeft:0 }}>
+        <Col xs={24} sm={12} md={6} style={{ marginBottom: 16, display: 'flex', paddingLeft: 0 }}>
           <Card style={{ height: '120px', width: '100%' }}>
             <Statistic
               title="Tổng bài tập"
@@ -254,7 +254,7 @@ export default function StudentDashboard() {
             />
           </Card>
         </Col>
-        <Col xs={24} sm={12} md={6} style={{ marginBottom: 16, display: 'flex', paddingRight:0 }}>
+        <Col xs={24} sm={12} md={6} style={{ marginBottom: 16, display: 'flex', paddingRight: 0 }}>
           <Card style={{ height: '120px', width: '100%' }}>
             <Statistic
               title="Điểm trung bình"
@@ -268,9 +268,9 @@ export default function StudentDashboard() {
       </Row>
 
       {/* Filters Section */}
-      <Card style={{ marginBottom: 24, width: '100%'}}>
+      <Card style={{ marginBottom: 24, width: '100%' }}>
         <Row gutter={[16, 16]} align="middle">
-          <Col xs={24} md={8} style={{height:48}}>
+          <Col xs={24} md={8} style={{ height: 48 }}>
             <Input
               placeholder="Tìm kiếm bài tập..."
               prefix={<SearchOutlined />}
@@ -311,15 +311,15 @@ export default function StudentDashboard() {
             </Select>
           </Col>
         </Row>
-        <div style={{ 
-          marginTop: 16, 
-          color: '#666', 
+        <div style={{
+          marginTop: 16,
+          color: '#666',
           fontSize: '14px',
           minHeight: '24px',
           display: 'flex',
           alignItems: 'center'
         }}>
-          <FilterOutlined style={{ marginRight: 8 }} /> 
+          <FilterOutlined style={{ marginRight: 8 }} />
           Tìm thấy <strong style={{ margin: '0 4px', minWidth: '20px', display: 'inline-block', textAlign: 'center' }}>{filteredAssignments.length}</strong> bài tập
         </div>
       </Card>
@@ -333,7 +333,7 @@ export default function StudentDashboard() {
           const assignedDate = a.assignedDate || a.createdAt
           return assignedDate >= todayTimestamp
         })
-        
+
         return todayFiltered.length > 0 && (
           <Card
             title={
@@ -346,39 +346,39 @@ export default function StudentDashboard() {
           >
             <List
               dataSource={todayFiltered}
-            loading={loading}
-            renderItem={(assignment) => (
-              <List.Item
-                actions={[getActionButton(assignment)]}
-              >
-                <List.Item.Meta
-                  title={
-                    <div>
-                      {assignment.title}
-                      {getStatusTag(assignment)}
-                    </div>
-                  }
-                  description={
-                    <div>
-                      <div>{assignment.questionSetName}</div>
-                      <div style={{ marginTop: 4 }}>
-                        <small>
-                          Giáo viên: {assignment.teacherName} |
-                          Hạn nộp: {new Date(assignment.dueDate * 1000).toLocaleDateString('vi-VN')}
-                        </small>
+              loading={loading}
+              renderItem={(assignment) => (
+                <List.Item
+                  actions={[getActionButton(assignment)]}
+                >
+                  <List.Item.Meta
+                    title={
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        {assignment.title}
+                        {getStatusTag(assignment)}
                       </div>
-                      {assignment.submissionScore !== null && assignment.submissionScore !== undefined && (
+                    }
+                    description={
+                      <div>
+                        <div>{assignment.questionSetName}</div>
                         <div style={{ marginTop: 4 }}>
-                          <Tag color="blue">Điểm: {assignment.submissionScore}/100</Tag>
+                          <small>
+                            Giáo viên: {assignment.teacherName} |
+                            Hạn nộp: {new Date(assignment.dueDate * 1000).toLocaleDateString('vi-VN')}
+                          </small>
                         </div>
-                      )}
-                    </div>
-                  }
-                />
-              </List.Item>
-            )}
-          />
-        </Card>
+                        {assignment.submissionScore !== null && assignment.submissionScore !== undefined && (
+                          <div style={{ marginTop: 4 }}>
+                            <Tag color="blue">Điểm: {assignment.submissionScore}/100</Tag>
+                          </div>
+                        )}
+                      </div>
+                    }
+                  />
+                </List.Item>
+              )}
+            />
+          </Card>
         )
       })()}
 
@@ -404,7 +404,7 @@ export default function StudentDashboard() {
               >
                 <List.Item.Meta
                   title={
-                    <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                       {assignment.title}
                       {getStatusTag(assignment)}
                     </div>

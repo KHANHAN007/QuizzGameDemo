@@ -35,7 +35,58 @@ export default function AssignmentDetail() {
       ])
 
       setAssignment(assignmentData)
-      setSubmissions(submissionsData || [])
+
+      // Group submissions by student
+      const studentMap = new Map()
+      submissionsData.forEach(sub => {
+        const key = sub.studentId
+        if (!studentMap.has(key)) {
+          studentMap.set(key, {
+            studentId: sub.studentId,
+            studentName: sub.studentName,
+            studentUsername: sub.studentUsername,
+            studentClass: sub.studentClass,
+            submissions: []
+          })
+        }
+        studentMap.get(key).submissions.push(sub)
+      })
+
+      // Convert to array and add latest submission info
+      const groupedData = Array.from(studentMap.values()).map(student => {
+        const sorted = student.submissions.sort((a, b) => b.attemptNumber - a.attemptNumber)
+        const latest = sorted[0]
+        return {
+          ...student,
+          attemptCount: student.submissions.length,
+          latestSubmission: latest,
+          status: latest ? 'completed' : 'pending',
+          score: latest?.score,
+          submittedAt: latest?.submittedAt
+        }
+      })
+
+      // Add students who haven't submitted
+      if (assignmentData.students) {
+        assignmentData.students.forEach(student => {
+          if (!studentMap.has(student.id)) {
+            groupedData.push({
+              studentId: student.id,
+              studentName: student.fullName,
+              studentUsername: student.username,
+              studentClass: student.class,
+              submissions: [],
+              attemptCount: 0,
+              latestSubmission: null,
+              status: 'pending',
+              score: null,
+              submittedAt: null
+            })
+          }
+        })
+      }
+
+      setSubmissions(groupedData)
     } catch (error) {
       message.error('Không thể tải dữ liệu: ' + error.message)
     } finally {
@@ -82,18 +133,43 @@ export default function AssignmentDetail() {
       title: 'Trạng thái',
       dataIndex: 'status',
       key: 'status',
-      render: (status) => getStatusTag(status)
+      render: (status, record) => (
+        <Space direction="vertical" size={0}>
+          {getStatusTag(status)}
+          {record.attemptCount > 0 && (
+            <Text type="secondary" style={{ fontSize: '12px' }}>
+              {record.attemptCount} lần làm
+            </Text>
+          )}
+        </Space>
+      )
     },
     {
       title: 'Điểm',
       dataIndex: 'score',
       key: 'score',
       align: 'center',
-      render: (score) => score !== null ? (
-        <Tag color={getScoreColor(score)} style={{ fontSize: '14px', fontWeight: 'bold' }}>
-          {score}/100
-        </Tag>
-      ) : <Text type="secondary">Chưa có</Text>
+      render: (score, record) => {
+        if (score !== null && score !== undefined) {
+          const allScores = record.submissions.map(s => s.score)
+          const bestScore = Math.max(...allScores)
+          const avgScore = Math.round(allScores.reduce((sum, s) => sum + s, 0) / allScores.length)
+
+          return (
+            <Space direction="vertical" size={0} style={{ textAlign: 'center' }}>
+              <Tag color={getScoreColor(score)} style={{ fontSize: '14px', fontWeight: 'bold' }}>
+                {score}/100
+              </Tag>
+              {record.attemptCount > 1 && (
+                <Text type="secondary" style={{ fontSize: '11px' }}>
+                  Cao nhất: {bestScore} | TB: {avgScore}
+                </Text>
+              )}
+            </Space>
+          )
+        }
+        return <Text type="secondary">Chưa có</Text>
+      }
     },
     {
       title: 'Thời gian nộp',
@@ -107,15 +183,44 @@ export default function AssignmentDetail() {
       title: 'Thao tác',
       key: 'action',
       align: 'center',
-      render: (_, record) => record.status === 'completed' ? (
-        <Button
-          type="link"
-          icon={<EyeOutlined />}
-          onClick={() => handleViewSubmission(record)}
-        >
-          Xem chi tiết
-        </Button>
-      ) : <Text type="secondary">-</Text>
+      render: (_, record) => {
+        if (record.status === 'pending') {
+          return <Text type="secondary">-</Text>
+        }
+
+        return (
+          <Space direction="vertical" size={4}>
+            {record.attemptCount === 1 ? (
+              <Button
+                type="link"
+                size="small"
+                icon={<EyeOutlined />}
+                onClick={() => navigate(`/teacher/submissions/${record.latestSubmission.id}`)}
+              >
+                Xem chi tiết
+              </Button>
+            ) : (
+              <>
+                <Button
+                  type="link"
+                  size="small"
+                  icon={<EyeOutlined />}
+                  onClick={() => navigate(`/teacher/assignment-history/${id}/${record.studentId}`)}
+                >
+                  Xem tất cả ({record.attemptCount})
+                </Button>
+                <Button
+                  type="link"
+                  size="small"
+                  onClick={() => navigate(`/teacher/submissions/${record.latestSubmission.id}`)}
+                >
+                  Lần mới nhất
+                </Button>
+              </>
+            )}
+          </Space>
+        )
+      }
     }
   ]
 
