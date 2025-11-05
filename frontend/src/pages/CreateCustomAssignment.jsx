@@ -26,6 +26,14 @@ export default function CreateCustomAssignment() {
     const [editingQuestion, setEditingQuestion] = useState(null)
     const [questionModalOpen, setQuestionModalOpen] = useState(false)
     const [questionForm] = Form.useForm()
+    
+    // Store form data across steps (FIX: BUG-011 - Form loses data when changing steps)
+    const [formData, setFormData] = useState({
+        title: '',
+        description: '',
+        dueDate: null,
+        assignedTo: []
+    })
 
     useEffect(() => {
         loadStudents()
@@ -188,6 +196,9 @@ export default function CreateCustomAssignment() {
         if (currentStep === 0) {
             try {
                 await form.validateFields(['title', 'description', 'dueDate'])
+                // Save Step 1 data to state before moving to Step 2
+                const values = form.getFieldsValue(['title', 'description', 'dueDate'])
+                setFormData(prev => ({ ...prev, ...values }))
                 setCurrentStep(1)
             } catch (error) {
                 message.error('Vui lòng điền đầy đủ thông tin bài tập')
@@ -208,24 +219,52 @@ export default function CreateCustomAssignment() {
     const handleSubmit = async () => {
         try {
             setLoading(true)
-            const values = form.getFieldsValue()
 
-            // Validate required fields
-            if (!values.title || !values.description || !values.dueDate) {
-                message.error('Vui lòng điền đầy đủ thông tin bài tập')
+            // Get Step 3 values (assignedTo)
+            const step3Values = form.getFieldsValue(['assignedTo'])
+            
+            // Merge with stored formData from Step 1
+            const allValues = { ...formData, ...step3Values }
+
+            console.log('Merged form values:', allValues) // Debug log
+
+            // Validate Step 1 fields
+            const title = allValues.title?.trim()
+            const description = allValues.description?.trim()
+            const dueDate = allValues.dueDate
+
+            if (!title || !description || !dueDate) {
+                message.error('Vui lòng hoàn thành Step 1: Điền đầy đủ thông tin bài tập (Tiêu đề, Mô tả, Hạn nộp)')
                 setCurrentStep(0)
+                setLoading(false)
+                return
+            }
+
+            // Validate Step 2: Must have at least 1 question
+            if (questions.length === 0) {
+                message.error('Vui lòng thêm ít nhất 1 câu hỏi')
+                setCurrentStep(1)
+                setLoading(false)
+                return
+            }
+
+            // Validate Step 3: Must select at least 1 student
+            if (!allValues.assignedTo || allValues.assignedTo.length === 0) {
+                message.error('Vui lòng chọn ít nhất 1 học sinh')
                 setLoading(false)
                 return
             }
 
             // Create assignment
             const assignmentData = {
-                title: values.title,
-                description: values.description,
-                dueDate: values.dueDate.unix(),
-                questionSetId: null, // Custom assignment
-                assignedStudents: values.assignedTo || [],
-                status: 'active'
+                title: title,
+                description: description,
+                dueDate: dueDate.unix(),
+                questionSetId: 1, // Default to 1 for custom assignments (backend requires this field)
+                questionCount: questions.length,
+                studentIds: allValues.assignedTo, // Backend expects 'studentIds', not 'assignedStudents'
+                status: 'active',
+                allowRetake: false
             }
 
             let assignmentId
@@ -242,7 +281,7 @@ export default function CreateCustomAssignment() {
             // Save questions
             for (let i = 0; i < questions.length; i++) {
                 const q = questions[i]
-                
+
                 // Map frontend field names to backend API format
                 const questionData = {
                     type: q.questionType, // 'multiple_choice' or 'essay'
