@@ -23,29 +23,72 @@ Uncaught ReferenceError: Select is not defined
     at CreateCustomAssignment (CreateCustomAssignment.jsx:727:13)
 ```
 
-**Steps to Reproduce:**
-1. Navigate to `/teacher/assignments/create`
-2. Complete Step 1
-3. Click "Tiếp theo" to go to Step 2
-4. Page crashes with error
-
-**Root Cause:**
-Missing `Select` in import statement:
-```jsx
-// Before (WRONG)
-import { Card, Form, Input, ... } from 'antd'
-
-// After (CORRECT)
-import { Card, Form, Input, ..., Select } from 'antd'
-```
-
 **Fix Applied:**
 Added `Select` to imports in line 5
 
-**Verification:**
-- [x] Code updated
-- [x] Page loads without error
-- [x] Select component renders properly
+---
+
+### BUG-009: Cannot read properties of undefined (reading 'unix')
+**Severity:** 🔴 CRITICAL  
+**Status:** ✅ FIXED  
+**Component:** `frontend/src/pages/CreateCustomAssignment.jsx`
+
+**Description:**
+When clicking "Hoàn thành" in Step 3, app crashes with error: `TypeError: Cannot read properties of undefined (reading 'unix')`
+
+**Error Message:**
+```
+TypeError: Cannot read properties of undefined (reading 'unix')
+    at Object.handleSubmit [as onClick] (CreateCustomAssignment.jsx:217:41)
+```
+
+**Root Cause:**
+`form.validateFields()` at Step 3 doesn't have access to Step 1 form fields, so `values.dueDate` is undefined.
+
+**Fix Applied:**
+```jsx
+// Before (WRONG)
+const values = await form.validateFields()
+const dueDate = values.dueDate.unix() // CRASH if undefined
+
+// After (CORRECT)
+const values = form.getFieldsValue()
+if (!values.title || !values.description || !values.dueDate) {
+    message.error('Vui lòng điền đầy đủ thông tin bài tập')
+    setCurrentStep(0)
+    return
+}
+const dueDate = values.dueDate.unix() // Safe now
+```
+
+---
+
+### BUG-010: Field name mismatch causing 400 Bad Request
+**Severity:** 🔴 CRITICAL  
+**Status:** ✅ FIXED  
+**Component:** `frontend/src/pages/CreateCustomAssignment.jsx`
+
+**Description:**
+Questions fail to save due to frontend sending wrong field names to backend API.
+
+**Root Cause:**
+Frontend uses: `questionType`, `optionA-D`, `correctAnswer`, `orderNum`  
+Backend expects: `type`, `choice1-4`, `correctIndex`, `questionOrder`
+
+**Fix Applied:**
+Added proper field mapping:
+```jsx
+const questionData = {
+    type: q.questionType,              // was: questionType
+    choice1: q.optionA || null,        // was: optionA
+    choice2: q.optionB || null,        // was: optionB
+    choice3: q.optionC || null,        // was: optionC
+    choice4: q.optionD || null,        // was: optionD
+    correctIndex: q.correctAnswer,     // was: correctAnswer
+    questionOrder: i,                  // was: orderNum
+    // ... other fields
+}
+```
 
 ---
 
@@ -423,11 +466,11 @@ Move constants to config file.
 
 | Severity | Count | Open | Fixed |
 |----------|-------|------|-------|
-| 🔴 Critical | 1 | 0 | 1 |
+| 🔴 Critical | 3 | 0 | 3 |
 | 🟠 High | 3 | 3 | 0 |
 | 🟡 Medium | 3 | 3 | 0 |
 | 🟢 Low | 2 | 2 | 0 |
-| **TOTAL** | **9** | **8** | **1** |
+| **TOTAL** | **11** | **8** | **3** |
 
 ---
 
