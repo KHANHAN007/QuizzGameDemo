@@ -410,29 +410,36 @@ export default function CreateCustomAssignment() {
                                         Thêm câu hỏi
                                     </Button>
 
-                                    <Upload
-                                        accept=".csv"
-                                        beforeUpload={handleImportCSV}
-                                        showUploadList={false}
-                                    >
-                                        <Button icon={<UploadOutlined />} size="large">
-                                            Nhập từ CSV
-                                        </Button>
-                                    </Upload>
+                                    {/* Only show CSV Import/Export when EDITING (id exists) */}
+                                    {id && (
+                                        <>
+                                            <Upload
+                                                accept=".csv"
+                                                beforeUpload={handleImportCSV}
+                                                showUploadList={false}
+                                            >
+                                                <Button icon={<UploadOutlined />} size="large">
+                                                    Nhập từ CSV
+                                                </Button>
+                                            </Upload>
 
-                                    <Button
-                                        icon={<DownloadOutlined />}
-                                        onClick={handleExportCSV}
-                                        size="large"
-                                        disabled={!id}
-                                    >
-                                        Xuất CSV
-                                    </Button>
+                                            <Button
+                                                icon={<DownloadOutlined />}
+                                                onClick={handleExportCSV}
+                                                size="large"
+                                            >
+                                                Xuất CSV
+                                            </Button>
+                                        </>
+                                    )}
                                 </Space>
 
                                 <div style={{ marginTop: 8 }}>
                                     <Text type="secondary">
                                         Tổng: {questions.length} câu hỏi
+                                        {!id && <span style={{ color: '#faad14', marginLeft: 8 }}>
+                                            (Lưu bài tập trước để dùng tính năng Import/Export CSV)
+                                        </span>}
                                     </Text>
                                 </div>
                             </div>

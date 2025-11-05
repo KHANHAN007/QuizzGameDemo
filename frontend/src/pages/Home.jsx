@@ -338,14 +338,7 @@ export default function HomeNew() {
         </Row>
       </div>
 
-      {/* Footer Info */}
-      <div style={{ marginTop: '60px', textAlign: 'center', color: '#999' }}>
-        <Space split={<Divider type="vertical" />}>
-          <Text type="secondary">Made with ❤️ by AnDang</Text>
-          <Text type="secondary">Version 2.0</Text>
-          <Text type="secondary">2025</Text>
-        </Space>
-      </div>
+
     </div>
   )
 }
