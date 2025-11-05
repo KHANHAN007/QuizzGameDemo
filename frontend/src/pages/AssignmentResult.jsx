@@ -14,14 +14,19 @@ import {
   Divider,
   Typography,
   List,
-  message
+  message,
+  Image
 } from 'antd'
 import {
   CheckCircleOutlined,
   CloseCircleOutlined,
   TrophyOutlined,
   ArrowLeftOutlined,
-  ReloadOutlined
+  ReloadOutlined,
+  FileImageOutlined,
+  FilePdfOutlined,
+  FileWordOutlined,
+  DownloadOutlined
 } from '@ant-design/icons'
 import { fetchSubmission } from '../api'
 import dayjs from 'dayjs'
@@ -83,30 +88,43 @@ export default function AssignmentResult() {
   const percentage = totalQuestions > 0 ? Math.round((correctAnswers / totalQuestions) * 100) : 0
   const isPendingGrading = submission.isPendingGrading === 1
 
+  // Kiểm tra xem bài có câu trắc nghiệm không
+  const hasMCQuestions = submission.answers && submission.answers.some(a => a.questionType === 'multiple_choice')
+  // Luôn phải đợi công bố để xem điểm
+  const shouldHideScore = isPendingGrading
+
   const getScoreColor = () => {
-    if (score >= 80) return '#52c41a'
-    if (score >= 50) return '#faad14'
+    const maxScore = submission?.maxScore || 100
+    const percentage = (score / maxScore) * 100
+    if (percentage >= 80) return '#52c41a'
+    if (percentage >= 50) return '#faad14'
     return '#ff4d4f'
   }
 
   const getResultIcon = () => {
-    if (isPendingGrading) return '⏳'
-    if (score >= 80) return '🎉'
-    if (score >= 50) return '👍'
+    if (shouldHideScore) return '⏳'
+    const maxScore = submission?.maxScore || 100
+    const percentage = (score / maxScore) * 100
+    if (percentage >= 80) return '🎉'
+    if (percentage >= 50) return '👍'
     return '💪'
   }
 
   const getResultTitle = () => {
-    if (isPendingGrading) return 'Đang chờ chấm điểm'
-    if (score >= 80) return 'Xuất sắc!'
-    if (score >= 50) return 'Khá tốt!'
+    if (shouldHideScore) return 'Đang chờ chấm điểm'
+    const maxScore = submission?.maxScore || 100
+    const percentage = (score / maxScore) * 100
+    if (percentage >= 80) return 'Xuất sắc!'
+    if (percentage >= 50) return 'Khá tốt!'
     return 'Cố gắng lên!'
   }
 
   const getResultMessage = () => {
-    if (isPendingGrading) return 'Bài tập của bạn đang được giáo viên chấm điểm. Vui lòng quay lại sau!'
-    if (score >= 80) return 'Bạn đã làm bài rất tốt! Hãy tiếp tục phát huy nhé!'
-    if (score >= 50) return 'Kết quả khá ổn! Hãy cố gắng hơn nữa ở những bài sau!'
+    if (shouldHideScore) return 'Bài tập của bạn đang được giáo viên chấm điểm. Vui lòng quay lại sau!'
+    const maxScore = submission?.maxScore || 100
+    const percentage = (score / maxScore) * 100
+    if (percentage >= 80) return 'Bạn đã làm bài rất tốt! Hãy tiếp tục phát huy nhé!'
+    if (percentage >= 50) return 'Kết quả khá ổn! Hãy cố gắng hơn nữa ở những bài sau!'
     return 'Đừng nản chí! Hãy ôn tập và thử lại nhé!'
   }
 
@@ -120,7 +138,7 @@ export default function AssignmentResult() {
         >
           Về trang chủ
         </Button>
-        {submission.allowRetake && (
+        {submission.allowRetake ? (
           <Button
             type="primary"
             icon={<ReloadOutlined />}
@@ -128,6 +146,10 @@ export default function AssignmentResult() {
           >
             Làm lại
           </Button>
+        ) : (
+          <Tag color="red" style={{ padding: '4px 12px', fontSize: '14px' }}>
+            Không cho phép làm lại
+          </Tag>
         )}
       </Space>
 
@@ -145,34 +167,41 @@ export default function AssignmentResult() {
           <Col xs={24} sm={6}>
             <Statistic
               title="Tổng điểm"
-              value={score}
-              suffix="/100"
-              valueStyle={{ color: getScoreColor(), fontSize: '48px', fontWeight: 'bold' }}
+              value={shouldHideScore ? 'Đang chấm điểm' : score}
+              suffix={shouldHideScore ? '' : `/${submission?.maxScore || 100}`}
+              valueStyle={{
+                color: shouldHideScore ? '#faad14' : getScoreColor(),
+                fontSize: shouldHideScore ? '24px' : '48px',
+                fontWeight: 'bold'
+              }}
               prefix={<TrophyOutlined />}
             />
           </Col>
           <Col xs={24} sm={6}>
             <Statistic
               title="Điểm trắc nghiệm"
-              value={mcScore}
+              value={hasMCQuestions ? mcScore : 'N/A'}
               valueStyle={{ fontSize: '36px', fontWeight: 'bold', color: '#1890ff' }}
             />
           </Col>
           <Col xs={24} sm={6}>
             <Statistic
               title="Điểm tự luận"
-              value={essayScore}
-              valueStyle={{ fontSize: '36px', fontWeight: 'bold', color: isPendingGrading ? '#faad14' : '#52c41a' }}
-              suffix={isPendingGrading ? <Tag color="warning">Chưa chấm</Tag> : ''}
+              value={shouldHideScore ? 'Đang chấm điểm' : essayScore}
+              valueStyle={{
+                fontSize: shouldHideScore ? '24px' : '36px',
+                fontWeight: 'bold',
+                color: shouldHideScore ? '#faad14' : '#52c41a'
+              }}
             />
           </Col>
           <Col xs={24} sm={6}>
             <Statistic
               title="Số câu đúng (MC)"
-              value={correctAnswers}
-              suffix={`/${totalQuestions}`}
+              value={hasMCQuestions ? correctAnswers : 'N/A'}
+              suffix={hasMCQuestions ? `/${totalQuestions}` : ''}
               valueStyle={{ fontSize: '36px', fontWeight: 'bold' }}
-              prefix={<CheckCircleOutlined />}
+              prefix={hasMCQuestions ? <CheckCircleOutlined /> : null}
             />
           </Col>
         </Row>
@@ -215,84 +244,181 @@ export default function AssignmentResult() {
         <Card title="Chi tiết câu trả lời">
           <List
             dataSource={submission.answers}
-            renderItem={(answer, index) => (
-              <List.Item
-                style={{
-                  padding: '20px',
-                  background: answer.isCorrect ? '#f6ffed' : '#fff2f0',
-                  marginBottom: '12px',
-                  borderRadius: '8px',
-                  border: `2px solid ${answer.isCorrect ? '#b7eb8f' : '#ffccc7'}`
-                }}
-              >
-                <div style={{ width: '100%' }}>
-                  <Space align="start" style={{ width: '100%', marginBottom: '12px' }}>
-                    <div style={{
-                      width: '32px',
-                      height: '32px',
-                      borderRadius: '50%',
-                      background: answer.isCorrect ? '#52c41a' : '#ff4d4f',
-                      color: 'white',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontWeight: 'bold',
-                      flexShrink: 0
-                    }}>
-                      {index + 1}
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <Text strong style={{ fontSize: '16px' }}>
-                        {answer.questionText}
-                      </Text>
-                    </div>
-                    {answer.isCorrect ? (
-                      <CheckCircleOutlined style={{ fontSize: '24px', color: '#52c41a' }} />
+            renderItem={(answer, index) => {
+              const isMC = answer.questionType === 'multiple_choice'
+              const isEssay = answer.questionType === 'essay'
+
+              return (
+                <List.Item
+                  style={{
+                    padding: '20px',
+                    background: isMC
+                      ? (answer.isCorrect ? '#f6ffed' : '#fff2f0')
+                      : '#fafafa',
+                    marginBottom: '12px',
+                    borderRadius: '8px',
+                    border: isMC
+                      ? `2px solid ${answer.isCorrect ? '#b7eb8f' : '#ffccc7'}`
+                      : '2px solid #d9d9d9'
+                  }}
+                >
+                  <div style={{ width: '100%' }}>
+                    <Space align="start" style={{ width: '100%', marginBottom: '12px' }}>
+                      <div style={{
+                        width: '32px',
+                        height: '32px',
+                        borderRadius: '50%',
+                        background: isMC
+                          ? (answer.isCorrect ? '#52c41a' : '#ff4d4f')
+                          : '#1890ff',
+                        color: 'white',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontWeight: 'bold',
+                        flexShrink: 0
+                      }}>
+                        {index + 1}
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <Space>
+                          <Text strong style={{ fontSize: '16px' }}>
+                            {answer.questionText}
+                          </Text>
+                          {isEssay && <Tag color="blue">Tự luận</Tag>}
+                        </Space>
+                      </div>
+                      {isMC && (
+                        answer.isCorrect ? (
+                          <CheckCircleOutlined style={{ fontSize: '24px', color: '#52c41a' }} />
+                        ) : (
+                          <CloseCircleOutlined style={{ fontSize: '24px', color: '#ff4d4f' }} />
+                        )
+                      )}
+                    </Space>
+
+                    <Divider style={{ margin: '12px 0' }} />
+
+                    {isMC ? (
+                      <Row gutter={[16, 16]}>
+                        <Col span={12}>
+                          <Text type="secondary">Câu trả lời của bạn:</Text>
+                          <div style={{ marginTop: '4px' }}>
+                            <Tag color={answer.isCorrect ? 'success' : 'error'} style={{ fontSize: '14px' }}>
+                              {answer.studentAnswer || 'Chưa trả lời'}
+                            </Tag>
+                          </div>
+                        </Col>
+                        <Col span={12}>
+                          <Text type="secondary">Đáp án đúng:</Text>
+                          <div style={{ marginTop: '4px' }}>
+                            <Tag color="success" style={{ fontSize: '14px' }}>
+                              {answer.correctAnswer}
+                            </Tag>
+                          </div>
+                        </Col>
+                      </Row>
                     ) : (
-                      <CloseCircleOutlined style={{ fontSize: '24px', color: '#ff4d4f' }} />
+                      <div>
+                        <Text type="secondary">Bài làm của bạn:</Text>
+                        <div style={{
+                          marginTop: '8px',
+                          padding: '12px',
+                          background: '#fff',
+                          borderRadius: '4px',
+                          border: '1px solid #d9d9d9',
+                          whiteSpace: 'pre-wrap'
+                        }}>
+                          {answer.essayText || <Text type="secondary" italic>Chưa trả lời</Text>}
+                        </div>
+
+                        {/* Uploaded Files */}
+                        {answer.files && answer.files.length > 0 && (
+                          <div style={{ marginTop: '12px' }}>
+                            <Text type="secondary">File đã nộp:</Text>
+                            <div style={{ marginTop: '8px' }}>
+                              <Image.PreviewGroup>
+                                <Space direction="vertical" style={{ width: '100%' }} size="small">
+                                  {answer.files.map(file => {
+                                    const isImage = file.fileType?.startsWith('image/') ||
+                                      /\.(jpg|jpeg|png|gif|webp)$/i.test(file.fileName)
+
+                                    if (isImage) {
+                                      return (
+                                        <div key={file.id} style={{ display: 'inline-block', marginRight: '8px' }}>
+                                          <Image
+                                            src={file.fileUrl}
+                                            alt={file.fileName}
+                                            style={{
+                                              maxHeight: '150px',
+                                              objectFit: 'cover',
+                                              borderRadius: '4px',
+                                              cursor: 'pointer'
+                                            }}
+                                          />
+                                          <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+                                            {file.fileName.length > 30 ? file.fileName.substring(0, 30) + '...' : file.fileName}
+                                          </div>
+                                        </div>
+                                      )
+                                    } else {
+                                      const isPdf = file.fileType === 'application/pdf' || file.fileName.endsWith('.pdf')
+                                      const isWord = /\.(doc|docx)$/i.test(file.fileName)
+                                      const icon = isPdf ? <FilePdfOutlined /> : isWord ? <FileWordOutlined /> : <DownloadOutlined />
+
+                                      return (
+                                        <Button
+                                          key={file.id}
+                                          icon={icon}
+                                          href={file.fileUrl}
+                                          target="_blank"
+                                          style={{ width: '100%', textAlign: 'left' }}
+                                        >
+                                          {file.fileName.length > 50 ? file.fileName.substring(0, 50) + '...' : file.fileName}
+                                          {file.fileSize && ` (${(file.fileSize / 1024).toFixed(1)} KB)`}
+                                        </Button>
+                                      )
+                                    }
+                                  })}
+                                </Space>
+                              </Image.PreviewGroup>
+                            </div>
+                          </div>
+                        )}
+
+                        {!shouldHideScore && answer.score !== null && answer.score !== undefined && (
+                          <div style={{ marginTop: '12px' }}>
+                            <Space>
+                              <Text strong>Điểm:</Text>
+                              <Tag color="blue" style={{ fontSize: '16px' }}>
+                                {answer.score}/{answer.maxScore}
+                              </Tag>
+                            </Space>
+                          </div>
+                        )}
+
+                        {!shouldHideScore && answer.teacherFeedback && (
+                          <div style={{
+                            marginTop: '12px',
+                            padding: '12px',
+                            background: '#e6f7ff',
+                            borderRadius: '4px',
+                            borderLeft: '3px solid #1890ff'
+                          }}>
+                            <Text type="secondary" style={{ fontSize: '12px' }}>
+                              � Nhận xét của giáo viên:
+                            </Text>
+                            <div style={{ marginTop: '4px' }}>
+                              <Text>{answer.teacherFeedback}</Text>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     )}
-                  </Space>
-
-                  <Divider style={{ margin: '12px 0' }} />
-
-                  <Row gutter={[16, 16]}>
-                    <Col span={12}>
-                      <Text type="secondary">Câu trả lời của bạn:</Text>
-                      <div style={{ marginTop: '4px' }}>
-                        <Tag color={answer.isCorrect ? 'success' : 'error'} style={{ fontSize: '14px' }}>
-                          {answer.studentAnswer || 'Chưa trả lời'}
-                        </Tag>
-                      </div>
-                    </Col>
-                    <Col span={12}>
-                      <Text type="secondary">Đáp án đúng:</Text>
-                      <div style={{ marginTop: '4px' }}>
-                        <Tag color="success" style={{ fontSize: '14px' }}>
-                          {answer.correctAnswer}
-                        </Tag>
-                      </div>
-                    </Col>
-                  </Row>
-
-                  {answer.explanation && (
-                    <div style={{
-                      marginTop: '12px',
-                      padding: '12px',
-                      background: 'rgba(0, 0, 0, 0.02)',
-                      borderRadius: '4px',
-                      borderLeft: '3px solid #1890ff'
-                    }}>
-                      <Text type="secondary" style={{ fontSize: '12px' }}>
-                        💡 Giải thích:
-                      </Text>
-                      <div style={{ marginTop: '4px' }}>
-                        <Text>{answer.explanation}</Text>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </List.Item>
-            )}
+                  </div>
+                </List.Item>
+              )
+            }}
           />
         </Card>
       )}
@@ -307,7 +433,7 @@ export default function AssignmentResult() {
           >
             Về trang chủ
           </Button>
-          {submission.allowRetake && (
+          {submission.allowRetake ?? (
             <Button
               type="primary"
               size="large"

@@ -139,7 +139,15 @@ export async function submitCustomAssignment(assignmentId, data, env, request) {
 
             if (question.type === 'multiple_choice') {
                 mcTotal++
-                const isCorrect = question.correctIndex === answer.selectedAnswer
+
+                // Convert correctIndex to number if it's a letter (A=0, B=1, C=2, D=3)
+                let correctIndex = question.correctIndex
+                if (typeof correctIndex === 'string') {
+                    const letterToIndex = { 'A': 0, 'B': 1, 'C': 2, 'D': 3 }
+                    correctIndex = letterToIndex[correctIndex.toUpperCase()] ?? parseInt(correctIndex)
+                }
+
+                const isCorrect = correctIndex === answer.selectedAnswer
                 if (isCorrect) mcCorrect++
 
                 // Save to student_answers
@@ -191,26 +199,29 @@ export async function submitCustomAssignment(assignmentId, data, env, request) {
             }
         }
 
-        // Calculate MC score (out of 100)
+        // Calculate MC score
         if (mcTotal > 0) {
-            const mcPercentage = (mcCorrect / mcTotal) * 100
             const mcPoints = questions.results
                 .filter(q => q.type === 'multiple_choice')
                 .reduce((sum, q) => sum + q.points, 0)
             mcScore = Math.round((mcCorrect / mcTotal) * mcPoints)
         }
 
+        // Calculate total max score
+        const totalMaxScore = questions.results.reduce((sum, q) => sum + (q.points || 0), 0)
+
         // Update submission with final scores
         const totalScore = mcScore // Essay score will be added when graded
         await env.DB.prepare(`
             UPDATE submissions 
-            SET score = ?, correctAnswers = ?, mcScore = ?, isPendingGrading = ?
+            SET score = ?, correctAnswers = ?, mcScore = ?, isPendingGrading = ?, totalQuestions = ?
             WHERE id = ?
         `).bind(
             totalScore,
             mcCorrect,
             mcScore,
             hasPendingEssay ? 1 : 0,
+            totalMaxScore, // Store max score in totalQuestions field temporarily
             submissionId
         ).run()
 

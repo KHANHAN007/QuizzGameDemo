@@ -521,6 +521,7 @@ async function getSubmissions(env, request, url) {
 
 async function getSubmission(env, request, id) {
     try {
+        console.log('getSubmission called for ID:', id);
         const authResult = await requireAuth(request, env);
         if (authResult.error) return errorResponse(authResult.error, authResult.status);
 
@@ -540,6 +541,8 @@ async function getSubmission(env, request, id) {
             WHERE s.id = ?
         `).bind(id).first();
 
+        console.log('Submission found:', submission ? 'yes' : 'no');
+
         if (!submission) {
             return errorResponse('Submission not found', 404);
         }
@@ -552,61 +555,134 @@ async function getSubmission(env, request, id) {
             return errorResponse('Forbidden', 403);
         }
 
-        // Get answers with question details
+        console.log('Getting answers for submissionId:', id);
+
+        // Get answers from student_answers (for custom assignments)
         const { results: answers } = await env.DB.prepare(`
             SELECT 
                 sa.questionId,
-                sa.questionText,
+                sa.questionType,
                 sa.selectedAnswer,
-                sa.correctAnswer,
-                sa.isCorrect,
-                sa.timeTaken,
-                q.explanation,
-                q.choice1,
-                q.choice2,
-                q.choice3,
-                q.choice4
-            FROM submission_answers sa
-            INNER JOIN questions q ON sa.questionId = q.id
+                sa.essayText,
+                sa.score,
+                sa.maxScore,
+                sa.feedback as teacherFeedback,
+                aq.questionText,
+                aq.type,
+                aq.choice1,
+                aq.choice2,
+                aq.choice3,
+                aq.choice4,
+                aq.correctIndex,
+                aq.points
+            FROM student_answers sa
+            INNER JOIN assignment_questions aq ON sa.questionId = aq.id
             WHERE sa.submissionId = ?
-            ORDER BY sa.id
+            ORDER BY aq.questionOrder
         `).bind(id).all();
 
-        // Parse options - support both old schema (choice1-4) and new schema (options JSON)
-        const parsedAnswers = answers.map(answer => {
-            try {
-                // Build options array from choice1-4
-                const options = [
-                    answer.choice1,
-                    answer.choice2,
-                    answer.choice3,
-                    answer.choice4
-                ];
+        console.log('Answers count:', answers ? answers.length : 0);
 
+        // Parse answers for both MC and Essay
+        const parsedAnswers = answers.map((answer, index) => {
+            try {
+                if (answer.questionType === 'multiple_choice' || answer.type === 'multiple_choice') {
+                    // Multiple choice question
+                    const options = [
+                        answer.choice1,
+                        answer.choice2,
+                        answer.choice3,
+                        answer.choice4
+                    ];
+
+                    // Convert correctIndex (A/B/C/D or 0/1/2/3) to number
+                    let correctIndex = answer.correctIndex
+                    if (typeof correctIndex === 'string') {
+                        const letterToIndex = { 'A': 0, 'B': 1, 'C': 2, 'D': 3 }
+                        correctIndex = letterToIndex[correctIndex.toUpperCase()] ?? parseInt(correctIndex)
+                    }
+
+                    const isCorrect = correctIndex === answer.selectedAnswer
+
+                    return {
+                        questionId: answer.questionId,
+                        questionText: answer.questionText,
+                        questionType: 'multiple_choice',
+                        selectedAnswer: answer.selectedAnswer,
+                        isCorrect: isCorrect,
+                        options,
+                        studentAnswer: options[answer.selectedAnswer] || 'Chưa trả lời',
+                        correctAnswer: options[correctIndex] || '',
+                        score: answer.score,
+                        maxScore: answer.maxScore
+                    };
+                } else {
+                    // Essay question
+                    return {
+                        questionId: answer.questionId,
+                        questionText: answer.questionText,
+                        questionType: 'essay',
+                        essayText: answer.essayText,
+                        score: answer.score,
+                        maxScore: answer.maxScore,
+                        teacherFeedback: answer.teacherFeedback,
+                        isCorrect: null // N/A for essay
+                    };
+                }
+            } catch (parseError) {
+                console.error(`Error parsing answer ${index}:`, parseError, answer);
+                // Return a safe fallback
                 return {
                     questionId: answer.questionId,
-                    questionText: answer.questionText,
-                    selectedAnswer: answer.selectedAnswer,
-                    correctAnswer: answer.correctAnswer,
-                    isCorrect: answer.isCorrect,
-                    timeTaken: answer.timeTaken,
-                    explanation: answer.explanation,
-                    options,
-                    studentAnswer: options[answer.selectedAnswer] || '',
-                    correctAnswerText: options[answer.correctAnswer] || ''
-                };
-            } catch (e) {
-                console.error('Error parsing answer:', e, answer);
-                return {
-                    ...answer,
-                    options: [],
-                    studentAnswer: '',
-                    correctAnswerText: ''
+                    questionText: answer.questionText || 'Error loading question',
+                    questionType: answer.questionType || 'unknown',
+                    error: true
                 };
             }
         });
 
+        // Get uploaded files for this submission
+        const { results: files } = await env.DB.prepare(`
+            SELECT 
+                id,
+                questionId,
+                fileName,
+                fileUrl,
+                fileType,
+                fileSize
+            FROM assignment_files
+            WHERE submissionId = ?
+            ORDER BY questionId, uploadedAt
+        `).bind(id).all();
+
+        console.log('Files count:', files ? files.length : 0);
+
+        // Group files by questionId
+        const filesByQuestion = {};
+        if (files) {
+            files.forEach(file => {
+                if (!filesByQuestion[file.questionId]) {
+                    filesByQuestion[file.questionId] = [];
+                }
+                filesByQuestion[file.questionId].push({
+                    id: file.id,
+                    fileName: file.fileName,
+                    fileUrl: file.fileUrl,
+                    fileType: file.fileType,
+                    fileSize: file.fileSize
+                });
+            });
+        }
+
+        // Add files to each answer
+        parsedAnswers.forEach(answer => {
+            answer.files = filesByQuestion[answer.questionId] || [];
+        });
+
         submission.answers = parsedAnswers;
+
+        // Add maxScore (stored in totalQuestions field)
+        submission.maxScore = submission.totalQuestions || 100;
 
         return jsonResponse(submission);
     } catch (error) {
@@ -1379,6 +1455,34 @@ export default {
                 return await deleteFile(fileId, env);
             }
 
+            // Serve file directly from R2 by fileKey path
+            if (path.match(/^\/files\//) && method === 'GET') {
+                const fileKey = path.substring(7); // Remove '/files/' prefix
+                try {
+                    const object = await env.R2.get(fileKey);
+
+                    if (!object) {
+                        return new Response('File not found', {
+                            status: 404,
+                            headers: corsHeaders
+                        });
+                    }
+
+                    return new Response(object.body, {
+                        headers: {
+                            'Content-Type': object.httpMetadata.contentType || 'application/octet-stream',
+                            'Cache-Control': 'public, max-age=31536000',
+                            ...corsHeaders
+                        }
+                    });
+                } catch (error) {
+                    return new Response('Error serving file', {
+                        status: 500,
+                        headers: corsHeaders
+                    });
+                }
+            }
+
             if (path.match(/^\/api\/submissions\/\d+\/files$/) && method === 'GET') {
                 const submissionId = path.split('/')[3];
                 return await getSubmissionFiles(submissionId, env);
@@ -1391,6 +1495,30 @@ export default {
                 const submissionId = path.split('/')[3];
                 const data = await request.json();
                 return await gradeEssay(submissionId, data, env, request);
+            }
+
+            if (path.match(/^\/api\/submissions\/\d+\/publish$/) && method === 'PUT') {
+                const submissionId = path.split('/')[3];
+                const authResult = await requireAuth(request, env);
+                if (authResult.error) {
+                    return errorResponse(authResult.error, authResult.status);
+                }
+
+                try {
+                    // Update isPendingGrading to 0 (published)
+                    await env.DB.prepare(`
+                        UPDATE submissions 
+                        SET isPendingGrading = 0 
+                        WHERE id = ?
+                    `).bind(submissionId).run();
+
+                    return jsonResponse({
+                        success: true,
+                        message: 'Đã công bố điểm cho học sinh'
+                    });
+                } catch (error) {
+                    return errorResponse(error.message);
+                }
             }
 
             if (path.match(/^\/api\/assignments\/\d+\/pending-grading$/) && method === 'GET') {

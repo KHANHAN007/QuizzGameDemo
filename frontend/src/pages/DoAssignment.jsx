@@ -204,8 +204,26 @@ export default function DoAssignment() {
     // Bỏ âm thanh click
   }
 
+  // Helper: kiểm tra câu hỏi đã được trả lời chưa
+  function isQuestionAnswered(question) {
+    if (question.questionType === 'essay') {
+      // Essay: đã làm nếu có text HOẶC có file
+      const hasText = answers[question.id] && answers[question.id].trim().length > 0
+      const hasFile = files[question.id] && files[question.id].length > 0
+      return hasText || hasFile
+    } else {
+      // MC: đã làm nếu có answer
+      return answers[question.id] !== undefined
+    }
+  }
+
   function getAnsweredCount() {
-    return Object.keys(answers).length
+    // Đếm câu đã trả lời: bao gồm cả text answer và uploaded files
+    let count = 0
+    questions.forEach(q => {
+      if (isQuestionAnswered(q)) count++
+    })
+    return count
   }
 
   function handleToggleMute() {
@@ -265,6 +283,7 @@ export default function DoAssignment() {
               formData.append('file', file)
               formData.append('assignmentId', id)
               formData.append('questionId', questionId)
+              formData.append('userId', user?.id || 0)
 
               const result = await api.post('/upload', formData, {
                 headers: {
@@ -607,23 +626,26 @@ export default function DoAssignment() {
               gap: '8px',
               marginBottom: '16px'
             }}>
-              {questions.map((q, index) => (
-                <Button
-                  key={q.id}
-                  type={currentQuestionIndex === index ? 'primary' : 'default'}
-                  onClick={() => handleJumpToQuestion(index)}
-                  style={{
-                    height: '40px',
-                    background: answers[q.id] !== undefined
-                      ? (currentQuestionIndex === index ? '#1890ff' : '#52c41a')
-                      : (currentQuestionIndex === index ? '#1890ff' : '#fff'),
-                    color: answers[q.id] !== undefined || currentQuestionIndex === index ? '#fff' : '#333',
-                    borderColor: currentQuestionIndex === index ? '#1890ff' : '#d9d9d9'
-                  }}
-                >
-                  {index + 1}
-                </Button>
-              ))}
+              {questions.map((q, index) => {
+                const isAnswered = isQuestionAnswered(q)
+                return (
+                  <Button
+                    key={q.id}
+                    type={currentQuestionIndex === index ? 'primary' : 'default'}
+                    onClick={() => handleJumpToQuestion(index)}
+                    style={{
+                      height: '40px',
+                      background: isAnswered
+                        ? (currentQuestionIndex === index ? '#1890ff' : '#52c41a')
+                        : (currentQuestionIndex === index ? '#1890ff' : '#fff'),
+                      color: isAnswered || currentQuestionIndex === index ? '#fff' : '#333',
+                      borderColor: currentQuestionIndex === index ? '#1890ff' : '#d9d9d9'
+                    }}
+                  >
+                    {index + 1}
+                  </Button>
+                )
+              })}
             </div>
 
             <Alert

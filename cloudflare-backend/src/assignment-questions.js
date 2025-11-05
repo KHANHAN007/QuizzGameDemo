@@ -254,7 +254,29 @@ export async function importAssignmentQuestionsCSV(env, request, assignmentId, c
             return errorResponse('Assignment not found or access denied', 404);
         }
 
-        // Parse CSV (format: type,question,choice1,choice2,choice3,choice4,correct,points,explanation)
+        // Simple CSV parser that handles quoted fields
+        function parseCSVLine(line) {
+            const result = [];
+            let current = '';
+            let inQuotes = false;
+
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+
+                if (char === '"') {
+                    inQuotes = !inQuotes;
+                } else if (char === ',' && !inQuotes) {
+                    result.push(current.trim());
+                    current = '';
+                } else {
+                    current += char;
+                }
+            }
+            result.push(current.trim());
+            return result;
+        }
+
+        // Parse CSV (format: type,question,option_a,option_b,option_c,option_d,correct_answer,points)
         const lines = csvData.trim().split('\n');
         const imported = [];
         let order = 0;
@@ -263,18 +285,24 @@ export async function importAssignmentQuestionsCSV(env, request, assignmentId, c
             const line = lines[i].trim();
             if (!line) continue;
 
-            const parts = line.split(',').map(p => p.trim().replace(/^"|"$/g, ''));
-            const [type, questionText, choice1, choice2, choice3, choice4, correctStr, pointsStr, explanation] = parts;
+            const parts = parseCSVLine(line);
+            const [type, questionText, choice1, choice2, choice3, choice4, correctStr, pointsStr] = parts;
 
             if (!type || !questionText) continue;
 
-            const correctIndex = parseInt(correctStr) || 0;
-            const points = parseInt(pointsStr) || 10;
+            // Parse correct answer (A, B, C, D -> 0, 1, 2, 3)
+            let correctIndex = null;
+            if (type === 'multiple_choice') {
+                const answerMap = { 'A': 0, 'B': 1, 'C': 2, 'D': 3 };
+                correctIndex = answerMap[correctStr?.toUpperCase()] ?? parseInt(correctStr) ?? 0;
+            }
+
+            const points = parseInt(pointsStr) || 1;
 
             const result = await env.DB.prepare(`
                 INSERT INTO assignment_questions 
-                (assignmentId, type, questionText, questionOrder, points, choice1, choice2, choice3, choice4, correctIndex, maxScore, explanation)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                (assignmentId, type, questionText, questionOrder, points, choice1, choice2, choice3, choice4, correctIndex, maxScore)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             `).bind(
                 assignmentId,
                 type,
@@ -285,9 +313,8 @@ export async function importAssignmentQuestionsCSV(env, request, assignmentId, c
                 choice2 || null,
                 choice3 || null,
                 choice4 || null,
-                type === 'multiple_choice' ? correctIndex : null,
-                points,
-                explanation || null
+                correctIndex,
+                points
             ).run();
 
             imported.push({ id: result.meta.last_row_id, questionText });

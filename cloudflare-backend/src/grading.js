@@ -54,63 +54,85 @@ export async function gradeEssay(submissionId, data, env, request) {
             })
         }
 
-        // Check if answer already exists
+        // Check if answer exists
         const existingAnswer = await env.DB.prepare(`
       SELECT * FROM student_answers 
-      WHERE submission_id = ? AND question_id = ?
+      WHERE submissionId = ? AND questionId = ?
     `).bind(submissionId, questionId).first()
+
+        if (!existingAnswer) {
+            return new Response(JSON.stringify({ error: 'Answer not found' }), {
+                status: 404,
+                headers: { 'Content-Type': 'application/json', ...corsHeaders }
+            })
+        }
 
         const now = Math.floor(Date.now() / 1000)
 
-        if (existingAnswer) {
-            // Update existing answer
-            await env.DB.prepare(`
-        UPDATE student_answers 
-        SET score = ?, teacher_feedback = ?, graded_at = ?
-        WHERE submission_id = ? AND question_id = ?
-      `).bind(score, feedback || null, now, submissionId, questionId).run()
-        } else {
-            // Create new answer record (in case it doesn't exist)
-            await env.DB.prepare(`
-        INSERT INTO student_answers 
-        (submission_id, question_id, answer_text, score, teacher_feedback, graded_at)
-        VALUES (?, ?, ?, ?, ?, ?)
-      `).bind(submissionId, questionId, null, score, feedback || null, now).run()
-        }
+        // Update the answer with grade
+        await env.DB.prepare(`
+      UPDATE student_answers 
+      SET score = ?, feedback = ?, isGraded = 1, gradedAt = ?
+      WHERE submissionId = ? AND questionId = ?
+    `).bind(score, feedback || null, now, submissionId, questionId).run()
 
-        // Recalculate total score for the submission
-        const answers = await env.DB.prepare(`
-      SELECT score FROM student_answers 
-      WHERE submission_id = ? AND score IS NOT NULL
+        // Recalculate essay score and total score
+        const essayAnswers = await env.DB.prepare(`
+      SELECT sa.score, aq.points
+      FROM student_answers sa
+      JOIN assignment_questions aq ON sa.questionId = aq.id
+      WHERE sa.submissionId = ? AND sa.questionType = 'essay'
     `).bind(submissionId).all()
 
-        const totalQuestions = await env.DB.prepare(`
-      SELECT COUNT(*) as count FROM assignment_questions 
-      WHERE assignment_id = (SELECT assignment_id FROM submissions WHERE id = ?)
-    `).bind(submissionId).first()
+        const mcAnswers = await env.DB.prepare(`
+      SELECT sa.score, aq.points
+      FROM student_answers sa
+      JOIN assignment_questions aq ON sa.questionId = aq.id
+      WHERE sa.submissionId = ? AND sa.questionType = 'multiple_choice'
+    `).bind(submissionId).all()
 
-        let finalScore = null
-        if (answers.results.length > 0 && answers.results.length === totalQuestions.count) {
-            // All questions graded, calculate average
-            const sum = answers.results.reduce((acc, a) => acc + a.score, 0)
-            finalScore = Math.round(sum / answers.results.length)
+        // Calculate essay score
+        let essayScore = 0
+        let isPendingGrading = 1  // Luôn set = 1 khi lưu/sửa điểm, giáo viên phải công bố lại
 
-            // Update submission with final score
-            await env.DB.prepare(`
-        UPDATE submissions 
-        SET score = ?, graded_at = ?
-        WHERE id = ?
-      `).bind(finalScore, now, submissionId).run()
+        if (essayAnswers.results && essayAnswers.results.length > 0) {
+            essayScore = essayAnswers.results.reduce((sum, a) => sum + (a.score || 0), 0)
+
+            // Check if any essay is still pending
+            const pendingCount = await env.DB.prepare(`
+        SELECT COUNT(*) as count FROM student_answers
+        WHERE submissionId = ? AND questionType = 'essay' AND isGraded = 0
+      `).bind(submissionId).first()
+
+            // Nếu còn câu chưa chấm thì vẫn pending
+            if (pendingCount.count > 0) {
+                isPendingGrading = 1
+            }
+            // Ngay cả khi đã chấm hết, vẫn giữ isPendingGrading = 1 cho đến khi giáo viên nhấn "Công bố"
         }
+
+        // Calculate MC score (already auto-graded)
+        const mcScore = mcAnswers.results ? mcAnswers.results.reduce((sum, a) => sum + (a.score || 0), 0) : 0
+
+        // Total score
+        const totalScore = mcScore + essayScore
+
+        // Update submission
+        await env.DB.prepare(`
+      UPDATE submissions 
+      SET score = ?, mcScore = ?, essayScore = ?, isPendingGrading = ?
+      WHERE id = ?
+    `).bind(totalScore, mcScore, essayScore, isPendingGrading, submissionId).run()
 
         return new Response(JSON.stringify({
             success: true,
             message: 'Essay graded successfully',
             score,
             feedback,
-            finalScore,
-            gradedQuestions: answers.results.length,
-            totalQuestions: totalQuestions.count
+            totalScore,
+            mcScore,
+            essayScore,
+            isPendingGrading
         }), {
             status: 200,
             headers: { 'Content-Type': 'application/json', ...corsHeaders }
@@ -235,19 +257,39 @@ export async function getSubmissionGradingDetail(submissionId, env) {
         const questions = await env.DB.prepare(`
       SELECT 
         aq.*,
-        sa.answer_text,
+        sa.essayText,
+        sa.selectedAnswer,
         sa.score,
-        sa.teacher_feedback,
-        sa.graded_at
+        sa.feedback as teacher_feedback,
+        sa.gradedAt as graded_at,
+        sa.isGraded,
+        CASE 
+          WHEN aq.type = 'multiple_choice' THEN 
+            CASE sa.selectedAnswer
+              WHEN 0 THEN aq.choice1
+              WHEN 1 THEN aq.choice2
+              WHEN 2 THEN aq.choice3
+              WHEN 3 THEN aq.choice4
+              ELSE NULL
+            END
+          ELSE sa.essayText
+        END as answer_text,
+        CASE 
+          WHEN aq.correctIndex = 'A' THEN 0
+          WHEN aq.correctIndex = 'B' THEN 1
+          WHEN aq.correctIndex = 'C' THEN 2
+          WHEN aq.correctIndex = 'D' THEN 3
+          ELSE NULL
+        END as correct_answer
       FROM assignment_questions aq
-      LEFT JOIN student_answers sa ON aq.id = sa.question_id AND sa.submission_id = ?
+      LEFT JOIN student_answers sa ON aq.id = sa.questionId AND sa.submissionId = ?
       WHERE aq.assignmentId = ?
       ORDER BY aq.questionOrder
     `).bind(submissionId, submission.assignmentId).all()
 
         // For essay questions, get uploaded files
         for (const q of questions.results || []) {
-            if (q.question_type === 'essay' || q.type === 'essay') {
+            if (q.type === 'essay') {
                 const files = await env.DB.prepare(`
           SELECT * FROM assignment_files
           WHERE submissionId = ? AND questionId = ?

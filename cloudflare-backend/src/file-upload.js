@@ -30,9 +30,10 @@ export async function uploadFile(request, env) {
     try {
         const formData = await request.formData()
         const file = formData.get('file')
-        const submissionId = formData.get('submissionId')
+        const submissionId = formData.get('submissionId') || null  // Optional during upload
         const questionId = formData.get('questionId')
         const userId = formData.get('userId')
+        const assignmentId = formData.get('assignmentId')
 
         // Validate inputs
         if (!file) {
@@ -42,8 +43,11 @@ export async function uploadFile(request, env) {
             })
         }
 
-        if (!submissionId || !questionId || !userId) {
-            return new Response(JSON.stringify({ error: 'Missing required fields' }), {
+        if (!questionId || !assignmentId) {
+            return new Response(JSON.stringify({
+                error: 'Missing required fields (questionId, assignmentId)',
+                received: { questionId, assignmentId, userId, submissionId }
+            }), {
                 status: 400,
                 headers: { 'Content-Type': 'application/json', ...corsHeaders }
             })
@@ -75,7 +79,7 @@ export async function uploadFile(request, env) {
         // Generate unique file key
         const timestamp = Date.now()
         const extension = ALLOWED_MIME_TYPES[file.type]
-        const fileKey = `submissions/${userId}/${submissionId}/${questionId}/${timestamp}${extension}`
+        const fileKey = `assignments/${assignmentId}/${questionId}/${timestamp}${extension}`
 
         // Upload to R2
         const arrayBuffer = await file.arrayBuffer()
@@ -85,25 +89,32 @@ export async function uploadFile(request, env) {
             },
             customMetadata: {
                 originalName: file.name,
-                submissionId: String(submissionId),
+                submissionId: submissionId ? String(submissionId) : 'pending',
                 questionId: String(questionId),
-                userId: String(userId),
+                assignmentId: String(assignmentId),
+                userId: userId ? String(userId) : 'unknown',
                 uploadedAt: new Date().toISOString()
             }
         })
 
+        // Generate public URL - use same worker domain
+        const fileUrl = `https://quiz-game-api.quiz-game-khanhan.workers.dev/files/${fileKey}`
+
         // Save file metadata to database
         const fileRecord = await env.DB.prepare(`
       INSERT INTO assignment_files 
-      (submissionId, questionId, fileKey, fileName, fileType, fileSize, uploadedAt)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+      (assignmentId, submissionId, questionId, fileKey, fileName, fileUrl, fileType, fileSize, uploadedBy, uploadedAt)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).bind(
+            assignmentId,
             submissionId,
             questionId,
             fileKey,
             file.name,
+            fileUrl,
             file.type,
             file.size,
+            userId || 0,
             Math.floor(Date.now() / 1000)
         ).run()
 
@@ -111,6 +122,7 @@ export async function uploadFile(request, env) {
             success: true,
             fileId: fileRecord.meta.last_row_id,
             fileKey,
+            fileUrl,
             fileName: file.name,
             fileSize: file.size,
             fileType: file.type
@@ -150,7 +162,7 @@ export async function downloadFile(fileId, env) {
         }
 
         // Get file from R2
-        const object = await env.R2.get(fileRecord.file_key)
+        const object = await env.R2.get(fileRecord.fileKey)
 
         if (!object) {
             return new Response(JSON.stringify({ error: 'File not found in storage' }), {
@@ -163,7 +175,7 @@ export async function downloadFile(fileId, env) {
         return new Response(object.body, {
             headers: {
                 'Content-Type': object.httpMetadata.contentType,
-                'Content-Disposition': `attachment; filename="${fileRecord.file_name}"`,
+                'Content-Disposition': `attachment; filename="${fileRecord.fileName}"`,
                 'Content-Length': object.size
             }
         })

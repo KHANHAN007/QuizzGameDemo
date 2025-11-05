@@ -1,21 +1,21 @@
-type,question,option_a,option_b,option_c,option_d,correct_answer,points
-multiple_choice,"2 + 3 = ?",3,4,5,6,C,1
-multiple_choice,"Con vật nào sống ở nước?","Chó","Mèo","Cá","Gà",C,1
-multiple_choice,"Số nào lớn hơn: 15 hay 12?",15,12,Bằng nhau,Không biết,A,1
-multiple_choice,"Màu của lá cây là gì?","Đỏ","Xanh","Vàng","Tím",B,1
-multiple_choice,"10 - 4 = ?",5,6,7,8,B,1
-multiple_choice,"Từ nào viết đúng chính tả?","Mẹ","Me","Mề","Mê",A,1
-multiple_choice,"Có bao nhiêu ngón tay trên một bàn tay?",4,5,6,10,B,1
-multiple_choice,"Con gì biết bay?","Cá","Chim","Rắn","Ếch",B,1
-multiple_choice,"5 + 5 = ?",8,9,10,11,C,1
-multiple_choice,"Mặt trời mọc ở hướng nào?","Tây","Nam","Đông","Bắc",C,1
-multiple_choice,"Số nào nhỏ nhất?",8,3,15,20,B,1
-multiple_choice,"Trái cây nào có màu đỏ?","Chuối","Táo","Cam","Xoài",B,1
-multiple_choice,"7 + 2 = ?",8,9,10,11,B,1
-multiple_choice,"Chữ cái đầu tiên trong bảng chữ cái là gì?",A,B,C,D,A,1
-multiple_choice,"Một tuần có bao nhiêu ngày?",5,6,7,8,C,1
-essay,"Em hãy kể tên 3 con vật em yêu thích và nói vì sao em thích chúng?",,,,,,3
-essay,"Gia đình em có bao nhiêu người? Em hãy giới thiệu về các thành viên trong gia đình.",,,,,,3
-essay,"Em hãy viết về món ăn em thích nhất. Món đó có vị như thế nào?",,,,,,2
-essay,"Kể về một người bạn thân của em. Các em thường chơi gì với nhau?",,,,,,2
-essay,"Em thích môn học nào nhất ở trường? Vì sao em thích môn học đó?",,,,,,2
+﻿type,question,option_a,option_b,option_c,option_d,correct_answer,points
+multiple_choice,2 + 3 = ?,3,4,5,6,C,1
+multiple_choice,Con vật nào sống ở nước?,Chó,Mèo,Cá,Gà,C,1
+multiple_choice,Số nào lớn hơn: 15 hay 12?,15,12,Bằng nhau,Không biết,A,1
+multiple_choice,Màu của lá cây là gì?,Đỏ,Xanh,Vàng,Tím,B,1
+multiple_choice,10 - 4 = ?,5,6,7,8,B,1
+multiple_choice,Từ nào viết đúng chính tả?,Mẹ,Me,Mề,Mê,A,1
+multiple_choice,Có bao nhiêu ngón tay trên một bàn tay?,4,5,6,10,B,1
+multiple_choice,Con gì biết bay?,Cá,Chim,Rắn,Ếch,B,1
+multiple_choice,5 + 5 = ?,8,9,10,11,C,1
+multiple_choice,Mặt trời mọc ở hướng nào?,Tây,Nam,Đông,Bắc,C,1
+multiple_choice,Số nào nhỏ nhất?,8,3,15,20,B,1
+multiple_choice,Trái cây nào có màu đỏ?,Chuối,Táo,Cam,Xoài,B,1
+multiple_choice,7 + 2 = ?,8,9,10,11,B,1
+multiple_choice,Chữ cái đầu tiên trong bảng chữ cái là gì?,A,B,C,D,A,1
+multiple_choice,Một tuần có bao nhiêu ngày?,5,6,7,8,C,1
+essay,Em hãy kể tên 3 con vật em yêu thích và nói vì sao em thích chúng?,,,,,,3
+essay,Gia đình em có bao nhiêu người? Em hãy giới thiệu về các thành viên trong gia đình.,,,,,,3
+essay,Em hãy viết về món ăn em thích nhất. Món đó có vị như thế nào?,,,,,,2
+essay,Kể về một người bạn thân của em. Các em thường chơi gì với nhau?,,,,,,2
+essay,Em thích môn học nào nhất ở trường? Vì sao em thích môn học đó?,,,,,,2
