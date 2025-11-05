@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
     Card, Form, Input, DatePicker, Button, Space, message, Steps,
-    Radio, InputNumber, Divider, Typography, List, Modal, Tag, Row, Col, Switch, Upload, Select
+    Radio, InputNumber, Divider, Typography, List, Modal, Tag, Row, Col, Switch, Upload, Select, Alert
 } from 'antd'
 import {
     PlusOutlined, DeleteOutlined, ArrowLeftOutlined, SaveOutlined,
@@ -26,7 +26,7 @@ export default function CreateCustomAssignment() {
     const [editingQuestion, setEditingQuestion] = useState(null)
     const [questionModalOpen, setQuestionModalOpen] = useState(false)
     const [questionForm] = Form.useForm()
-    
+
     // Store form data across steps (FIX: BUG-011 - Form loses data when changing steps)
     const [formData, setFormData] = useState({
         title: '',
@@ -222,7 +222,7 @@ export default function CreateCustomAssignment() {
 
             // Get Step 3 values (assignedTo)
             const step3Values = form.getFieldsValue(['assignedTo'])
-            
+
             // Merge with stored formData from Step 1
             const allValues = { ...formData, ...step3Values }
 
@@ -248,11 +248,11 @@ export default function CreateCustomAssignment() {
                 return
             }
 
-            // Validate Step 3: Must select at least 1 student
-            if (!allValues.assignedTo || allValues.assignedTo.length === 0) {
-                message.error('Vui lòng chọn ít nhất 1 học sinh')
-                setLoading(false)
-                return
+            // Step 3: If no students selected, assign to ALL students
+            let selectedStudents = allValues.assignedTo || []
+            if (selectedStudents.length === 0) {
+                selectedStudents = students.map(s => s.id)
+                message.info(`Không chọn học sinh cụ thể → Giao cho TẤT CẢ ${selectedStudents.length} học sinh`)
             }
 
             // Create assignment
@@ -262,7 +262,7 @@ export default function CreateCustomAssignment() {
                 dueDate: dueDate.unix(),
                 questionSetId: 1, // Default to 1 for custom assignments (backend requires this field)
                 questionCount: questions.length,
-                studentIds: allValues.assignedTo, // Backend expects 'studentIds', not 'assignedStudents'
+                studentIds: selectedStudents, // Backend expects 'studentIds', not 'assignedStudents'
                 status: 'active',
                 allowRetake: false
             }
@@ -503,15 +503,24 @@ export default function CreateCustomAssignment() {
                         <>
                             <Title level={4}>Giao bài cho học sinh</Title>
 
-                            <Form.Item name="assignedTo" label="Chọn học sinh">
+                            <Alert
+                                message="💡 Mẹo"
+                                description="Không chọn học sinh nào = Giao bài cho TẤT CẢ học sinh trong hệ thống"
+                                type="info"
+                                showIcon
+                                style={{ marginBottom: 16 }}
+                            />
+
+                            <Form.Item name="assignedTo" label="Chọn học sinh (không bắt buộc)">
                                 <Select
                                     mode="multiple"
-                                    placeholder="Chọn học sinh (để trống = giao cho tất cả)"
+                                    placeholder="Để trống để giao cho tất cả học sinh, hoặc chọn học sinh cụ thể"
                                     options={students.map(s => ({
                                         label: `${s.fullName} - ${s.class}`,
                                         value: s.id
                                     }))}
                                     size="large"
+                                    allowClear
                                 />
                             </Form.Item>
 
