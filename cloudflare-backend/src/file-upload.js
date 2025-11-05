@@ -3,6 +3,13 @@
  * Handles file uploads to Cloudflare R2 storage
  */
 
+// CORS headers
+const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+}
+
 // Allowed file types
 const ALLOWED_MIME_TYPES = {
     'image/jpeg': '.jpg',
@@ -31,14 +38,14 @@ export async function uploadFile(request, env) {
         if (!file) {
             return new Response(JSON.stringify({ error: 'No file provided' }), {
                 status: 400,
-                headers: { 'Content-Type': 'application/json' }
+                headers: { 'Content-Type': 'application/json', ...corsHeaders }
             })
         }
 
         if (!submissionId || !questionId || !userId) {
             return new Response(JSON.stringify({ error: 'Missing required fields' }), {
                 status: 400,
-                headers: { 'Content-Type': 'application/json' }
+                headers: { 'Content-Type': 'application/json', ...corsHeaders }
             })
         }
 
@@ -49,7 +56,7 @@ export async function uploadFile(request, env) {
                 allowedTypes: Object.values(ALLOWED_MIME_TYPES)
             }), {
                 status: 400,
-                headers: { 'Content-Type': 'application/json' }
+                headers: { 'Content-Type': 'application/json', ...corsHeaders }
             })
         }
 
@@ -61,7 +68,7 @@ export async function uploadFile(request, env) {
                 fileSize: `${(file.size / 1024 / 1024).toFixed(2)}MB`
             }), {
                 status: 400,
-                headers: { 'Content-Type': 'application/json' }
+                headers: { 'Content-Type': 'application/json', ...corsHeaders }
             })
         }
 
@@ -88,7 +95,7 @@ export async function uploadFile(request, env) {
         // Save file metadata to database
         const fileRecord = await env.DB.prepare(`
       INSERT INTO assignment_files 
-      (submission_id, question_id, file_key, file_name, file_type, file_size, uploaded_at)
+      (submissionId, questionId, fileKey, fileName, fileType, fileSize, uploadedAt)
       VALUES (?, ?, ?, ?, ?, ?, ?)
     `).bind(
             submissionId,
@@ -109,7 +116,7 @@ export async function uploadFile(request, env) {
             fileType: file.type
         }), {
             status: 200,
-            headers: { 'Content-Type': 'application/json' }
+            headers: { 'Content-Type': 'application/json', ...corsHeaders }
         })
 
     } catch (error) {
@@ -119,7 +126,7 @@ export async function uploadFile(request, env) {
             message: error.message
         }), {
             status: 500,
-            headers: { 'Content-Type': 'application/json' }
+            headers: { 'Content-Type': 'application/json', ...corsHeaders }
         })
     }
 }
@@ -138,7 +145,7 @@ export async function downloadFile(fileId, env) {
         if (!fileRecord) {
             return new Response(JSON.stringify({ error: 'File not found' }), {
                 status: 404,
-                headers: { 'Content-Type': 'application/json' }
+                headers: { 'Content-Type': 'application/json', ...corsHeaders }
             })
         }
 
@@ -148,7 +155,7 @@ export async function downloadFile(fileId, env) {
         if (!object) {
             return new Response(JSON.stringify({ error: 'File not found in storage' }), {
                 status: 404,
-                headers: { 'Content-Type': 'application/json' }
+                headers: { 'Content-Type': 'application/json', ...corsHeaders }
             })
         }
 
@@ -168,7 +175,7 @@ export async function downloadFile(fileId, env) {
             message: error.message
         }), {
             status: 500,
-            headers: { 'Content-Type': 'application/json' }
+            headers: { 'Content-Type': 'application/json', ...corsHeaders }
         })
     }
 }
@@ -187,7 +194,7 @@ export async function deleteFile(fileId, env) {
         if (!fileRecord) {
             return new Response(JSON.stringify({ error: 'File not found' }), {
                 status: 404,
-                headers: { 'Content-Type': 'application/json' }
+                headers: { 'Content-Type': 'application/json', ...corsHeaders }
             })
         }
 
@@ -204,7 +211,7 @@ export async function deleteFile(fileId, env) {
             message: 'File deleted successfully'
         }), {
             status: 200,
-            headers: { 'Content-Type': 'application/json' }
+            headers: { 'Content-Type': 'application/json', ...corsHeaders }
         })
 
     } catch (error) {
@@ -214,7 +221,7 @@ export async function deleteFile(fileId, env) {
             message: error.message
         }), {
             status: 500,
-            headers: { 'Content-Type': 'application/json' }
+            headers: { 'Content-Type': 'application/json', ...corsHeaders }
         })
     }
 }
@@ -233,7 +240,7 @@ export async function getSubmissionFiles(submissionId, env) {
 
         return new Response(JSON.stringify(files.results || []), {
             status: 200,
-            headers: { 'Content-Type': 'application/json' }
+            headers: { 'Content-Type': 'application/json', ...corsHeaders }
         })
 
     } catch (error) {
@@ -243,7 +250,8 @@ export async function getSubmissionFiles(submissionId, env) {
             message: error.message
         }), {
             status: 500,
-            headers: { 'Content-Type': 'application/json' }
+            headers: { 'Content-Type': 'application/json', ...corsHeaders }
         })
     }
 }
+

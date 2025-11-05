@@ -41,8 +41,17 @@ export default function TeacherDashboard() {
   })
   const [loading, setLoading] = useState(false)
   const [activeTab, setActiveTab] = useState('overview')
+  const [welcomeModalOpen, setWelcomeModalOpen] = useState(false)
 
   useEffect(() => {
+    // Check if user just logged in
+    const justLoggedIn = sessionStorage.getItem('justLoggedIn')
+    if (justLoggedIn === 'true') {
+      setWelcomeModalOpen(true)
+      sessionStorage.removeItem('justLoggedIn')
+      // Auto-hide after 5 seconds
+      setTimeout(() => setWelcomeModalOpen(false), 5000)
+    }
     loadDashboardData()
   }, [])
 

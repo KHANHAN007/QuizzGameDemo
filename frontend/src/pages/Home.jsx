@@ -1,6 +1,6 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Card, Row, Col, Button, Typography, Space, Divider } from 'antd'
+import { Card, Row, Col, Button, Typography, Space, Divider, Modal } from 'antd'
 import {
   TrophyOutlined,
   UserOutlined,
@@ -8,7 +8,8 @@ import {
   RocketOutlined,
   CheckCircleOutlined,
   DashboardOutlined,
-  FileTextOutlined
+  FileTextOutlined,
+  HeartOutlined
 } from '@ant-design/icons'
 import { useAuth } from '../contexts/AuthContext'
 
@@ -17,9 +18,169 @@ const { Title, Paragraph, Text } = Typography
 export default function HomeNew() {
   const navigate = useNavigate()
   const { user, isAuthenticated } = useAuth()
+  const [welcomeModalOpen, setWelcomeModalOpen] = useState(false)
+
+  useEffect(() => {
+    // Only show modal if user just logged in
+    const justLoggedIn = sessionStorage.getItem('justLoggedIn')
+
+    if (justLoggedIn === 'true') {
+      setWelcomeModalOpen(true)
+      // Clear the flag so it doesn't show again
+      sessionStorage.removeItem('justLoggedIn')
+
+      // Auto-hide after 5 seconds
+      const timer = setTimeout(() => {
+        setWelcomeModalOpen(false)
+      }, 5000)
+
+      return () => clearTimeout(timer)
+    }
+  }, [])
 
   return (
     <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '40px 24px' }}>
+      {/* Welcome Modal */}
+      <Modal
+        open={welcomeModalOpen}
+        onCancel={() => setWelcomeModalOpen(false)}
+        footer={null}
+        width={700}
+        centered
+        closable={true}
+        styles={{
+          body: { padding: 0 },
+          content: { padding: 0, overflow: 'hidden' }
+        }}
+      >
+        <div style={{
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          padding: '40px',
+          textAlign: 'center',
+          color: 'white'
+        }}>
+          <div style={{
+            fontSize: '80px',
+            marginBottom: '16px',
+            animation: 'bounce 1s ease-in-out infinite'
+          }}>
+            🎈
+          </div>
+
+          <Title level={1} style={{ color: 'white', marginBottom: '8px', fontSize: '36px' }}>
+            Chào mừng đến với Quiz Fun!
+          </Title>
+
+          <Paragraph style={{ fontSize: '18px', color: 'rgba(255,255,255,0.9)', marginBottom: 0 }}>
+            Hệ thống học tập và thi trắc nghiệm trực tuyến
+          </Paragraph>
+        </div>
+
+        <div style={{ padding: '32px 40px', background: '#f5f5f5' }}>
+          <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+            <Text style={{ fontSize: '20px', fontWeight: 500, color: '#333' }}>
+              ✨ Tính năng nổi bật
+            </Text>
+          </div>
+
+          <Row gutter={[16, 16]} style={{ marginBottom: '32px' }}>
+            <Col span={12}>
+              <div style={{
+                padding: '16px',
+                background: 'linear-gradient(135deg, #667eea15 0%, #764ba215 100%)',
+                borderRadius: '8px',
+                textAlign: 'center',
+                height: '100%'
+              }}>
+                <div style={{ fontSize: '32px', marginBottom: '8px' }}>📝</div>
+                <Text strong style={{ fontSize: '14px', color: '#333' }}>Bài tập tùy chỉnh</Text>
+                <br />
+                <Text type="secondary" style={{ fontSize: '12px' }}>Trắc nghiệm + Tự luận</Text>
+              </div>
+            </Col>
+            <Col span={12}>
+              <div style={{
+                padding: '16px',
+                background: 'linear-gradient(135deg, #667eea15 0%, #764ba215 100%)',
+                borderRadius: '8px',
+                textAlign: 'center',
+                height: '100%'
+              }}>
+                <div style={{ fontSize: '32px', marginBottom: '8px' }}>📊</div>
+                <Text strong style={{ fontSize: '14px', color: '#333' }}>Theo dõi tiến độ</Text>
+                <br />
+                <Text type="secondary" style={{ fontSize: '12px' }}>Real-time tracking</Text>
+              </div>
+            </Col>
+            <Col span={12}>
+              <div style={{
+                padding: '16px',
+                background: 'linear-gradient(135deg, #667eea15 0%, #764ba215 100%)',
+                borderRadius: '8px',
+                textAlign: 'center',
+                height: '100%'
+              }}>
+                <div style={{ fontSize: '32px', marginBottom: '8px' }}>🎮</div>
+                <Text strong style={{ fontSize: '14px', color: '#333' }}>Chế độ Guest</Text>
+                <br />
+                <Text type="secondary" style={{ fontSize: '12px' }}>Không cần đăng nhập</Text>
+              </div>
+            </Col>
+            <Col span={12}>
+              <div style={{
+                padding: '16px',
+                background: 'linear-gradient(135deg, #667eea15 0%, #764ba215 100%)',
+                borderRadius: '8px',
+                textAlign: 'center',
+                height: '100%'
+              }}>
+                <div style={{ fontSize: '32px', marginBottom: '8px' }}>⚡</div>
+                <Text strong style={{ fontSize: '14px', color: '#333' }}>Chấm tự động</Text>
+                <br />
+                <Text type="secondary" style={{ fontSize: '12px' }}>Kết quả tức thời</Text>
+              </div>
+            </Col>
+          </Row>
+
+          <div style={{ textAlign: 'center' }}>
+            <Button
+              type="primary"
+              size="large"
+              onClick={() => setWelcomeModalOpen(false)}
+              style={{
+                width: '250px',
+                height: '50px',
+                fontSize: '18px',
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                border: 'none',
+                borderRadius: '25px',
+                boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)'
+              }}
+            >
+              Bắt đầu ngay! 🚀
+            </Button>
+          </div>
+
+          <Divider style={{ margin: '24px 0' }} />
+
+          <div style={{ textAlign: 'center', fontSize: '13px', color: '#999' }}>
+            <HeartOutlined style={{ color: '#ff4d4f', marginRight: '6px' }} />
+            Made with <strong style={{ color: '#667eea' }}>Ant Design 5.0</strong> © 2025
+          </div>
+        </div>
+      </Modal>
+
+      <style>{`
+        @keyframes bounce {
+          0%, 100% {
+            transform: translateY(0);
+          }
+          50% {
+            transform: translateY(-10px);
+          }
+        }
+      `}</style>
+
       {/* Hero Section */}
       <div style={{ textAlign: 'center', marginBottom: '60px' }}>
         <div style={{ fontSize: '64px', marginBottom: '16px' }}>🎈</div>

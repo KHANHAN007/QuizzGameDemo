@@ -59,7 +59,7 @@ export async function getAssignmentQuestions(env, request, assignmentId) {
             ORDER BY questionOrder ASC, id ASC
         `).bind(assignmentId).all();
 
-        return jsonResponse(questions);
+        return jsonResponse({ questions });
     } catch (error) {
         console.error('getAssignmentQuestions error:', error);
         return errorResponse(error.message);

@@ -100,29 +100,76 @@ export default function CreateCustomAssignment() {
     }
 
     const handleImportCSV = async (file) => {
-        if (!id) {
-            message.error('Vui lòng lưu bài tập trước khi nhập CSV')
-            return false
-        }
-
-        const formData = new FormData()
-        formData.append('file', file)
-
         try {
-            const response = await fetch(`${api.baseURL}/assignments/${id}/import-csv`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                },
-                body: formData
-            })
+            // If editing existing assignment, use API import
+            if (id) {
+                const formData = new FormData()
+                formData.append('file', file)
 
-            if (!response.ok) throw new Error('Import failed')
+                const response = await fetch(`${api.baseURL}/assignments/${id}/import-csv`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: formData
+                })
 
-            const result = await response.json()
-            message.success(`Đã nhập ${result.questions.length} câu hỏi từ CSV`)
-            loadAssignment() // Reload to show imported questions
+                if (!response.ok) throw new Error('Import failed')
+
+                const result = await response.json()
+                message.success(`Đã nhập ${result.questions.length} câu hỏi từ CSV`)
+                loadAssignment() // Reload to show imported questions
+            } else {
+                // If creating new assignment, parse CSV locally and add to state
+                const text = await file.text()
+                const lines = text.split('\n').filter(line => line.trim())
+
+                if (lines.length < 2) {
+                    throw new Error('File CSV rỗng hoặc không hợp lệ')
+                }
+
+                // Skip header line
+                const dataLines = lines.slice(1)
+                const importedQuestions = []
+
+                for (const line of dataLines) {
+                    // Parse CSV line (handle commas in quotes)
+                    const matches = line.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g)
+                    if (!matches || matches.length < 2) continue
+
+                    const values = matches.map(v => v.replace(/^"|"$/g, '').trim())
+                    const [type, question, optA, optB, optC, optD, correctAns, points] = values
+
+                    if (type === 'multiple_choice') {
+                        importedQuestions.push({
+                            questionType: 'multiple_choice',
+                            questionText: question,
+                            optionA: optA || '',
+                            optionB: optB || '',
+                            optionC: optC || '',
+                            optionD: optD || '',
+                            correctAnswer: correctAns || 'A',
+                            points: parseInt(points) || 10
+                        })
+                    } else if (type === 'essay') {
+                        importedQuestions.push({
+                            questionType: 'essay',
+                            questionText: question,
+                            points: parseInt(points) || 10
+                        })
+                    }
+                }
+
+                if (importedQuestions.length === 0) {
+                    throw new Error('Không tìm thấy câu hỏi hợp lệ trong file CSV')
+                }
+
+                // Add imported questions to current questions
+                setQuestions([...questions, ...importedQuestions])
+                message.success(`Đã nhập ${importedQuestions.length} câu hỏi từ CSV`)
+            }
         } catch (error) {
+            console.error('Import CSV error:', error)
             message.error('Không thể nhập CSV: ' + error.message)
         }
 
@@ -410,27 +457,26 @@ export default function CreateCustomAssignment() {
                                         Thêm câu hỏi
                                     </Button>
 
-                                    {/* Only show CSV Import/Export when EDITING (id exists) */}
-                                    {id && (
-                                        <>
-                                            <Upload
-                                                accept=".csv"
-                                                beforeUpload={handleImportCSV}
-                                                showUploadList={false}
-                                            >
-                                                <Button icon={<UploadOutlined />} size="large">
-                                                    Nhập từ CSV
-                                                </Button>
-                                            </Upload>
+                                    {/* CSV Import - Always available (can import when creating new) */}
+                                    <Upload
+                                        accept=".csv"
+                                        beforeUpload={handleImportCSV}
+                                        showUploadList={false}
+                                    >
+                                        <Button icon={<UploadOutlined />} size="large">
+                                            📥 Nhập từ CSV
+                                        </Button>
+                                    </Upload>
 
-                                            <Button
-                                                icon={<DownloadOutlined />}
-                                                onClick={handleExportCSV}
-                                                size="large"
-                                            >
-                                                Xuất CSV
-                                            </Button>
-                                        </>
+                                    {/* CSV Export - Only available when editing (need saved questions) */}
+                                    {id && (
+                                        <Button
+                                            icon={<DownloadOutlined />}
+                                            onClick={handleExportCSV}
+                                            size="large"
+                                        >
+                                            📤 Xuất CSV
+                                        </Button>
                                     )}
                                 </Space>
 

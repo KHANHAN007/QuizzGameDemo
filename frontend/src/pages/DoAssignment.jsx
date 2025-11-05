@@ -101,9 +101,49 @@ export default function DoAssignment() {
         message.info('Bài tập này cho phép làm nhiều lần. Đây là lần làm mới!', 3)
       }
 
-      // Load questions for this assignment's question set
-      const quizData = await fetchQuiz(assignmentData.questionSetId, assignmentData.questionCount || 10)
-      setQuestions(quizData.questions || [])
+      // Load questions based on assignment type
+      let questionsData = []
+
+      if (assignmentData.questionSetId === 1) {
+        // Custom assignment (questionSetId = 1) - load from assignment_questions table
+        try {
+          const result = await api.get(`/assignments/${id}/questions`)
+
+          console.log('📋 Raw questions from API:', result.questions)
+
+          // Transform custom questions to match the expected format
+          questionsData = result.questions.map(q => {
+            const transformed = {
+              id: q.id,
+              text: q.questionText || q.text,
+              question: q.questionText || q.text,
+              questionType: q.type || q.questionType || 'multiple_choice',
+              choices: (q.type === 'multiple_choice' || q.questionType === 'multiple_choice')
+                ? [q.choice1, q.choice2, q.choice3, q.choice4].filter(Boolean)
+                : [],
+              choice1: q.choice1,
+              choice2: q.choice2,
+              choice3: q.choice3,
+              choice4: q.choice4,
+              correctIndex: q.correctIndex,
+              points: q.points || 10
+            }
+            console.log('✅ Transformed question:', transformed)
+            return transformed
+          })
+
+          console.log('📝 Total questions loaded:', questionsData.length)
+        } catch (err) {
+          console.error('Failed to load custom questions:', err)
+          throw new Error('Không thể tải câu hỏi bài tập tùy chỉnh')
+        }
+      } else {
+        // Regular assignment - load from question sets (old behavior)
+        const quizData = await fetchQuiz(assignmentData.questionSetId, assignmentData.questionCount || 10)
+        questionsData = quizData.questions || []
+      }
+
+      setQuestions(questionsData)
 
       // Calculate time left
       if (assignmentData.dueDate) {
@@ -211,25 +251,73 @@ export default function DoAssignment() {
       setSubmitting(true)
       audioManager.playSound('submit')
 
-      // Prepare submission data - backend expects 'selectedAnswer' field
-      const submissionAnswers = questions.map(q => ({
-        questionId: q.id,
-        selectedAnswer: answers[q.id] !== undefined ? answers[q.id] : -1,
-        timeTaken: 0 // TODO: Track time per question
-      }))
+      // Step 1: Upload files for essay questions first
+      const uploadedFileIds = {}
+
+      for (const questionId in files) {
+        const questionFiles = files[questionId]
+        if (questionFiles && questionFiles.length > 0) {
+          const fileIds = []
+
+          for (const file of questionFiles) {
+            try {
+              const formData = new FormData()
+              formData.append('file', file)
+              formData.append('assignmentId', id)
+              formData.append('questionId', questionId)
+
+              const result = await api.post('/upload', formData, {
+                headers: {
+                  'Content-Type': 'multipart/form-data'
+                }
+              })
+
+              if (result && result.fileId) {
+                fileIds.push(result.fileId)
+              }
+            } catch (err) {
+              console.error('File upload error:', err)
+              message.warning(`Không thể upload file: ${file.name}`)
+            }
+          }
+
+          uploadedFileIds[questionId] = fileIds
+        }
+      }
+
+      // Step 2: Prepare submission data with both MC and Essay answers
+      const submissionAnswers = questions.map(q => {
+        const answer = {
+          questionId: q.id,
+          questionType: q.questionType,
+          timeTaken: 0
+        }
+
+        if (q.questionType === 'essay') {
+          // Essay question - send text answer and file IDs
+          answer.essayText = answers[q.id] || ''
+          answer.fileIds = uploadedFileIds[q.id] || []
+        } else {
+          // Multiple choice - send selected answer index
+          answer.selectedAnswer = answers[q.id] !== undefined ? answers[q.id] : -1
+        }
+
+        return answer
+      })
 
       const submissionData = {
-        assignmentId: parseInt(id),
         answers: submissionAnswers,
         timeTaken: 0 // TODO: Track total time
       }
 
-      console.log('📤 Submitting:', submissionData)
+      console.log('📤 Submitting to assignment:', id, submissionData)
 
-      const result = await submitAssignment(submissionData)
+      // Use custom assignment submit endpoint
+      const result = await api.post(`/assignments/${id}/submit`, submissionData)
 
-      // Clear draft
+      // Clear draft and files
       localStorage.removeItem(`assignment_${id}_draft`)
+      setFiles({})
 
       // Tắt nhạc nền khi nộp bài thành công
       audioManager.pauseBackgroundMusic()
@@ -381,48 +469,102 @@ export default function DoAssignment() {
 
             <div className="question-text" style={{ fontSize: '20px', fontWeight: 600, marginBottom: '32px' }}>
               {currentQuestion.text || currentQuestion.question}
+              {currentQuestion.questionType === 'essay' && (
+                <Tag color="blue" style={{ marginLeft: '12px' }}>Tự luận - {currentQuestion.points} điểm</Tag>
+              )}
             </div>
 
-            <Radio.Group
-              value={answers[currentQuestion.id]}
-              onChange={(e) => handleSelectAnswer(currentQuestion.id, e.target.value)}
-              style={{ width: '100%' }}
-            >
-              <Space direction="vertical" style={{ width: '100%' }} size="large">
-                {currentQuestion.choices.map((choice, index) => (
-                  <Radio.Button
-                    key={index}
-                    value={index}
-                    style={{
-                      width: '100%',
-                      height: 'auto',
-                      padding: '16px 20px',
-                      textAlign: 'left',
-                      whiteSpace: 'normal',
-                      fontSize: '16px'
+            {/* Multiple Choice Questions */}
+            {(!currentQuestion.questionType || currentQuestion.questionType === 'multiple_choice') && (
+              <Radio.Group
+                value={answers[currentQuestion.id]}
+                onChange={(e) => handleSelectAnswer(currentQuestion.id, e.target.value)}
+                style={{ width: '100%' }}
+              >
+                <Space direction="vertical" style={{ width: '100%' }} size="large">
+                  {currentQuestion.choices.map((choice, index) => (
+                    <Radio.Button
+                      key={index}
+                      value={index}
+                      style={{
+                        width: '100%',
+                        height: 'auto',
+                        padding: '16px 20px',
+                        textAlign: 'left',
+                        whiteSpace: 'normal',
+                        fontSize: '16px'
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <span style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          width: '32px',
+                          height: '32px',
+                          borderRadius: '50%',
+                          background: answers[currentQuestion.id] === index ? '#1890ff' : '#f0f0f0',
+                          color: answers[currentQuestion.id] === index ? '#fff' : '#333',
+                          fontWeight: 'bold',
+                          flexShrink: 0
+                        }}>
+                          {String.fromCharCode(65 + index)}
+                        </span>
+                        <span style={{ flex: 1 }}>{choice}</span>
+                      </div>
+                    </Radio.Button>
+                  ))}
+                </Space>
+              </Radio.Group>
+            )}
+
+            {/* Essay Questions */}
+            {currentQuestion.questionType === 'essay' && (
+              <div>
+                <TextArea
+                  rows={8}
+                  placeholder="Nhập câu trả lời của bạn ở đây..."
+                  value={answers[currentQuestion.id] || ''}
+                  onChange={(e) => setAnswers(prev => ({
+                    ...prev,
+                    [currentQuestion.id]: e.target.value
+                  }))}
+                  style={{ fontSize: '16px', marginBottom: '16px' }}
+                />
+
+                <div style={{ marginTop: '16px' }}>
+                  <Upload
+                    multiple
+                    beforeUpload={(file) => {
+                      // Store file for later upload
+                      setFiles(prev => ({
+                        ...prev,
+                        [currentQuestion.id]: [...(prev[currentQuestion.id] || []), file]
+                      }))
+                      return false // Prevent auto upload
                     }}
+                    onRemove={(file) => {
+                      setFiles(prev => ({
+                        ...prev,
+                        [currentQuestion.id]: (prev[currentQuestion.id] || []).filter(f => f.uid !== file.uid)
+                      }))
+                    }}
+                    fileList={files[currentQuestion.id]?.map(f => ({
+                      uid: f.uid,
+                      name: f.name,
+                      status: 'done'
+                    })) || []}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <span style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        width: '32px',
-                        height: '32px',
-                        borderRadius: '50%',
-                        background: answers[currentQuestion.id] === index ? '#1890ff' : '#f0f0f0',
-                        color: answers[currentQuestion.id] === index ? '#fff' : '#333',
-                        fontWeight: 'bold',
-                        flexShrink: 0
-                      }}>
-                        {String.fromCharCode(65 + index)}
-                      </span>
-                      <span style={{ flex: 1 }}>{choice}</span>
-                    </div>
-                  </Radio.Button>
-                ))}
-              </Space>
-            </Radio.Group>
+                    <Button icon={<UploadOutlined />}>
+                      📎 Đính kèm file (ảnh, PDF, Word...)
+                    </Button>
+                  </Upload>
+                  <div style={{ marginTop: '8px', fontSize: '12px', color: '#999' }}>
+                    Có thể đính kèm nhiều file (mỗi file tối đa 10MB)
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div style={{ marginTop: '32px', display: 'flex', justifyContent: 'space-between', gap: '16px' }}>
               <Button

@@ -9,13 +9,9 @@ export default function Login() {
   const { login, isAuthenticated, user } = useAuth()
   const [loading, setLoading] = useState(false)
 
-  // If already logged in, redirect to appropriate dashboard
+  // If already logged in, redirect to Home page
   if (isAuthenticated) {
-    if (user.role === 'teacher') {
-      return <Navigate to="/teacher/dashboard" replace />
-    } else if (user.role === 'student') {
-      return <Navigate to="/student/dashboard" replace />
-    }
+    return <Navigate to="/" replace />
   }
 
   async function handleLogin(values) {
@@ -31,14 +27,11 @@ export default function Login() {
       if (result.success) {
         message.success(`Chào mừng, ${result.user.fullName}!`, 3)
 
-        // Redirect based on role
-        if (result.user.role === 'teacher') {
-          navigate('/teacher/dashboard')
-        } else if (result.user.role === 'student') {
-          navigate('/student/dashboard')
-        } else {
-          navigate('/')
-        }
+        // Set flag to show welcome modal on Home page
+        sessionStorage.setItem('justLoggedIn', 'true')
+
+        // Navigate to Home page (modal will show there)
+        navigate('/')
       } else {
         console.error('❌ Login failed:', result.error)
         message.error(result.error || 'Đăng nhập thất bại', 5)

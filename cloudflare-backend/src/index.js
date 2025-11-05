@@ -6,6 +6,7 @@
 import { hashPassword, verifyPassword, generateToken, verifyToken, requireAuth, requireRole } from './auth.js';
 import { uploadFile, downloadFile, deleteFile, getSubmissionFiles } from './file-upload.js';
 import { gradeEssay, getPendingGrading, getSubmissionGradingDetail, autoGradeAssignment } from './grading.js';
+import { submitCustomAssignment } from './submission.js';
 import {
     getAssignmentQuestions,
     createAssignmentQuestion,
@@ -1352,6 +1353,13 @@ export default {
             if (path === '/api/submissions' && method === 'POST') {
                 const data = await request.json();
                 return await submitAssignment(env, request, data);
+            }
+
+            // Submit custom assignment (MC + Essay)
+            if (path.match(/^\/api\/assignments\/\d+\/submit$/) && method === 'POST') {
+                const assignmentId = path.split('/')[3];
+                const data = await request.json();
+                return await submitCustomAssignment(assignmentId, data, env, request);
             }
 
             // ============================================

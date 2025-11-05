@@ -160,12 +160,12 @@ export default function StudentDashboard() {
     const canRetake = assignment.allowRetake
 
     if (isSubmitted && !canRetake) {
-      // Đã làm và KHÔNG cho phép làm lại - chỉ xem kết quả
+      // Đã làm và KHÔNG cho phép làm lại - đi thẳng vào chi tiết kết quả
       return (
         <Button
           type="default"
           icon={<TrophyOutlined />}
-          onClick={() => navigate(`/student/assignment-history/${assignment.id}`)}
+          onClick={() => navigate(`/student/submissions/${assignment.submissionId}`)}
         >
           Xem kết quả
         </Button>
@@ -173,7 +173,7 @@ export default function StudentDashboard() {
     }
 
     if (isSubmitted && canRetake) {
-      // Đã làm và CÓ thể làm lại - xem tất cả lần làm
+      // Đã làm và CÓ thể làm lại - xem tất cả lần làm (lịch sử)
       return (
         <Space>
           <Button
@@ -182,7 +182,7 @@ export default function StudentDashboard() {
             onClick={() => navigate(`/student/assignment-history/${assignment.id}`)}
             size="small"
           >
-            Xem kết quả ({assignment.attemptCount || 1})
+            Xem lịch sử ({assignment.attemptCount || 1})
           </Button>
           <Button
             type="primary"

@@ -76,9 +76,12 @@ export default function AssignmentResult() {
   }
 
   const score = submission.score || 0
+  const mcScore = submission.mcScore || 0
+  const essayScore = submission.essayScore || 0
   const totalQuestions = submission.totalQuestions || 0
   const correctAnswers = submission.correctAnswers || 0
   const percentage = totalQuestions > 0 ? Math.round((correctAnswers / totalQuestions) * 100) : 0
+  const isPendingGrading = submission.isPendingGrading === 1
 
   const getScoreColor = () => {
     if (score >= 80) return '#52c41a'
@@ -87,18 +90,21 @@ export default function AssignmentResult() {
   }
 
   const getResultIcon = () => {
+    if (isPendingGrading) return '⏳'
     if (score >= 80) return '🎉'
     if (score >= 50) return '👍'
     return '💪'
   }
 
   const getResultTitle = () => {
+    if (isPendingGrading) return 'Đang chờ chấm điểm'
     if (score >= 80) return 'Xuất sắc!'
     if (score >= 50) return 'Khá tốt!'
     return 'Cố gắng lên!'
   }
 
   const getResultMessage = () => {
+    if (isPendingGrading) return 'Bài tập của bạn đang được giáo viên chấm điểm. Vui lòng quay lại sau!'
     if (score >= 80) return 'Bạn đã làm bài rất tốt! Hãy tiếp tục phát huy nhé!'
     if (score >= 50) return 'Kết quả khá ổn! Hãy cố gắng hơn nữa ở những bài sau!'
     return 'Đừng nản chí! Hãy ôn tập và thử lại nhé!'
@@ -136,41 +142,38 @@ export default function AssignmentResult() {
         </Paragraph>
 
         <Row gutter={[24, 24]} style={{ marginTop: '32px' }}>
-          <Col xs={24} sm={8}>
+          <Col xs={24} sm={6}>
             <Statistic
-              title="Điểm số"
+              title="Tổng điểm"
               value={score}
               suffix="/100"
               valueStyle={{ color: getScoreColor(), fontSize: '48px', fontWeight: 'bold' }}
               prefix={<TrophyOutlined />}
             />
           </Col>
-          <Col xs={24} sm={8}>
+          <Col xs={24} sm={6}>
             <Statistic
-              title="Số câu đúng"
-              value={correctAnswers}
-              suffix={`/${totalQuestions}`}
-              valueStyle={{ fontSize: '48px', fontWeight: 'bold' }}
-              prefix={<CheckCircleOutlined />}
+              title="Điểm trắc nghiệm"
+              value={mcScore}
+              valueStyle={{ fontSize: '36px', fontWeight: 'bold', color: '#1890ff' }}
             />
           </Col>
-          <Col xs={24} sm={8}>
-            <div style={{ textAlign: 'center' }}>
-              <Text type="secondary" style={{ fontSize: '14px', display: 'block', marginBottom: '8px' }}>
-                Tỷ lệ chính xác
-              </Text>
-              <Progress
-                type="circle"
-                percent={percentage}
-                strokeColor={getScoreColor()}
-                width={120}
-                format={(percent) => (
-                  <span style={{ fontSize: '24px', fontWeight: 'bold' }}>
-                    {percent}%
-                  </span>
-                )}
-              />
-            </div>
+          <Col xs={24} sm={6}>
+            <Statistic
+              title="Điểm tự luận"
+              value={essayScore}
+              valueStyle={{ fontSize: '36px', fontWeight: 'bold', color: isPendingGrading ? '#faad14' : '#52c41a' }}
+              suffix={isPendingGrading ? <Tag color="warning">Chưa chấm</Tag> : ''}
+            />
+          </Col>
+          <Col xs={24} sm={6}>
+            <Statistic
+              title="Số câu đúng (MC)"
+              value={correctAnswers}
+              suffix={`/${totalQuestions}`}
+              valueStyle={{ fontSize: '36px', fontWeight: 'bold' }}
+              prefix={<CheckCircleOutlined />}
+            />
           </Col>
         </Row>
       </Card>
@@ -185,13 +188,13 @@ export default function AssignmentResult() {
             {submission.teacherName}
           </Descriptions.Item>
           <Descriptions.Item label="Thời gian nộp">
-            {submission.submittedAt 
+            {submission.submittedAt
               ? dayjs.unix(submission.submittedAt).format('DD/MM/YYYY HH:mm')
               : 'Chưa nộp'
             }
           </Descriptions.Item>
           <Descriptions.Item label="Thời gian làm bài">
-            {submission.timeTaken 
+            {submission.timeTaken
               ? `${Math.floor(submission.timeTaken / 60)} phút ${submission.timeTaken % 60} giây`
               : 'N/A'
             }

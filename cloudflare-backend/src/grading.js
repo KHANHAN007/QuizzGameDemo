@@ -3,6 +3,13 @@
  * Handles teacher grading of student essay submissions
  */
 
+// CORS headers
+const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+}
+
 /**
  * Grade an essay question
  * POST /api/submissions/:submissionId/grade-essay
@@ -16,14 +23,14 @@ export async function gradeEssay(submissionId, data, env, request) {
         if (!questionId) {
             return new Response(JSON.stringify({ error: 'questionId is required' }), {
                 status: 400,
-                headers: { 'Content-Type': 'application/json' }
+                headers: { 'Content-Type': 'application/json', ...corsHeaders }
             })
         }
 
         if (score === undefined || score === null) {
             return new Response(JSON.stringify({ error: 'score is required' }), {
                 status: 400,
-                headers: { 'Content-Type': 'application/json' }
+                headers: { 'Content-Type': 'application/json', ...corsHeaders }
             })
         }
 
@@ -31,7 +38,7 @@ export async function gradeEssay(submissionId, data, env, request) {
         if (score < 0 || score > 100) {
             return new Response(JSON.stringify({ error: 'Score must be between 0 and 100' }), {
                 status: 400,
-                headers: { 'Content-Type': 'application/json' }
+                headers: { 'Content-Type': 'application/json', ...corsHeaders }
             })
         }
 
@@ -43,7 +50,7 @@ export async function gradeEssay(submissionId, data, env, request) {
         if (!submission) {
             return new Response(JSON.stringify({ error: 'Submission not found' }), {
                 status: 404,
-                headers: { 'Content-Type': 'application/json' }
+                headers: { 'Content-Type': 'application/json', ...corsHeaders }
             })
         }
 
@@ -106,7 +113,7 @@ export async function gradeEssay(submissionId, data, env, request) {
             totalQuestions: totalQuestions.count
         }), {
             status: 200,
-            headers: { 'Content-Type': 'application/json' }
+            headers: { 'Content-Type': 'application/json', ...corsHeaders }
         })
 
     } catch (error) {
@@ -116,7 +123,7 @@ export async function gradeEssay(submissionId, data, env, request) {
             message: error.message
         }), {
             status: 500,
-            headers: { 'Content-Type': 'application/json' }
+            headers: { 'Content-Type': 'application/json', ...corsHeaders }
         })
     }
 }
@@ -182,7 +189,7 @@ export async function getPendingGrading(assignmentId, env) {
 
         return new Response(JSON.stringify(results), {
             status: 200,
-            headers: { 'Content-Type': 'application/json' }
+            headers: { 'Content-Type': 'application/json', ...corsHeaders }
         })
 
     } catch (error) {
@@ -192,7 +199,7 @@ export async function getPendingGrading(assignmentId, env) {
             message: error.message
         }), {
             status: 500,
-            headers: { 'Content-Type': 'application/json' }
+            headers: { 'Content-Type': 'application/json', ...corsHeaders }
         })
     }
 }
@@ -207,20 +214,20 @@ export async function getSubmissionGradingDetail(submissionId, env) {
         const submission = await env.DB.prepare(`
       SELECT 
         s.*,
-        u.full_name as student_name,
+        u.fullName as student_name,
         u.class as student_class,
         u.email as student_email,
         a.title as assignment_title
       FROM submissions s
-      JOIN users u ON s.user_id = u.id
-      JOIN assignments a ON s.assignment_id = a.id
+      JOIN users u ON s.studentId = u.id
+      JOIN assignments a ON s.assignmentId = a.id
       WHERE s.id = ?
     `).bind(submissionId).first()
 
         if (!submission) {
             return new Response(JSON.stringify({ error: 'Submission not found' }), {
                 status: 404,
-                headers: { 'Content-Type': 'application/json' }
+                headers: { 'Content-Type': 'application/json', ...corsHeaders }
             })
         }
 
@@ -234,17 +241,17 @@ export async function getSubmissionGradingDetail(submissionId, env) {
         sa.graded_at
       FROM assignment_questions aq
       LEFT JOIN student_answers sa ON aq.id = sa.question_id AND sa.submission_id = ?
-      WHERE aq.assignment_id = ?
-      ORDER BY aq.order_num
-    `).bind(submissionId, submission.assignment_id).all()
+      WHERE aq.assignmentId = ?
+      ORDER BY aq.questionOrder
+    `).bind(submissionId, submission.assignmentId).all()
 
         // For essay questions, get uploaded files
         for (const q of questions.results || []) {
-            if (q.question_type === 'essay') {
+            if (q.question_type === 'essay' || q.type === 'essay') {
                 const files = await env.DB.prepare(`
           SELECT * FROM assignment_files
-          WHERE submission_id = ? AND question_id = ?
-          ORDER BY uploaded_at DESC
+          WHERE submissionId = ? AND questionId = ?
+          ORDER BY uploadedAt DESC
         `).bind(submissionId, q.id).all()
 
                 q.files = files.results || []
@@ -256,7 +263,7 @@ export async function getSubmissionGradingDetail(submissionId, env) {
             questions: questions.results || []
         }), {
             status: 200,
-            headers: { 'Content-Type': 'application/json' }
+            headers: { 'Content-Type': 'application/json', ...corsHeaders }
         })
 
     } catch (error) {
@@ -266,7 +273,7 @@ export async function getSubmissionGradingDetail(submissionId, env) {
             message: error.message
         }), {
             status: 500,
-            headers: { 'Content-Type': 'application/json' }
+            headers: { 'Content-Type': 'application/json', ...corsHeaders }
         })
     }
 }
@@ -291,7 +298,7 @@ export async function autoGradeAssignment(assignmentId, env) {
                 gradedCount: 0
             }), {
                 status: 200,
-                headers: { 'Content-Type': 'application/json' }
+                headers: { 'Content-Type': 'application/json', ...corsHeaders }
             })
         }
 
@@ -333,7 +340,7 @@ export async function autoGradeAssignment(assignmentId, env) {
             gradedCount
         }), {
             status: 200,
-            headers: { 'Content-Type': 'application/json' }
+            headers: { 'Content-Type': 'application/json', ...corsHeaders }
         })
 
     } catch (error) {
@@ -343,7 +350,8 @@ export async function autoGradeAssignment(assignmentId, env) {
             message: error.message
         }), {
             status: 500,
-            headers: { 'Content-Type': 'application/json' }
+            headers: { 'Content-Type': 'application/json', ...corsHeaders }
         })
     }
 }
+
