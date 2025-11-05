@@ -5,6 +5,7 @@
 
 import { hashPassword, verifyPassword, generateToken, verifyToken, requireAuth, requireRole } from './auth.js';
 import { uploadFile, downloadFile, deleteFile, getSubmissionFiles } from './file-upload.js';
+import { gradeEssay, getPendingGrading, getSubmissionGradingDetail, autoGradeAssignment } from './grading.js';
 
 // CORS headers
 const corsHeaders = {
@@ -1507,6 +1508,30 @@ export default {
             if (path.match(/^\/api\/submissions\/\d+\/files$/) && method === 'GET') {
                 const submissionId = path.split('/')[3];
                 return await getSubmissionFiles(submissionId, env);
+            }
+
+            // ============================================
+            // GRADING ROUTES
+            // ============================================
+            if (path.match(/^\/api\/submissions\/\d+\/grade-essay$/) && method === 'POST') {
+                const submissionId = path.split('/')[3];
+                const data = await request.json();
+                return await gradeEssay(submissionId, data, env, request);
+            }
+
+            if (path.match(/^\/api\/assignments\/\d+\/pending-grading$/) && method === 'GET') {
+                const assignmentId = path.split('/')[3];
+                return await getPendingGrading(assignmentId, env);
+            }
+
+            if (path.match(/^\/api\/submissions\/\d+\/grading-detail$/) && method === 'GET') {
+                const submissionId = path.split('/')[3];
+                return await getSubmissionGradingDetail(submissionId, env);
+            }
+
+            if (path.match(/^\/api\/assignments\/\d+\/auto-grade$/) && method === 'POST') {
+                const assignmentId = path.split('/')[3];
+                return await autoGradeAssignment(assignmentId, env);
             }
 
             // ============================================
