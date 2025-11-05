@@ -13,7 +13,9 @@ import {
   Row,
   Col,
   Alert,
-  Switch
+  Switch,
+  Input,
+  Upload
 } from 'antd'
 import {
   CheckCircleOutlined,
@@ -25,14 +27,17 @@ import {
   ExclamationCircleOutlined,
   FileTextOutlined,
   SoundOutlined,
-  CustomerServiceOutlined
+  CustomerServiceOutlined,
+  UploadOutlined,
+  PaperClipOutlined,
+  DeleteOutlined
 } from '@ant-design/icons'
-import { fetchAssignment, fetchQuiz, submitAssignment } from '../api'
+import { fetchAssignment, fetchQuiz, submitAssignment, api } from '../api'
 import { useAuth } from '../contexts/AuthContext'
 import audioManager from '../utils/audioManager'
 import './DoAssignment.css'
 
-// Removed deprecated Countdown - using Statistic.Timer instead
+const { TextArea } = Input
 
 export default function DoAssignment() {
   const { id } = useParams()
@@ -42,7 +47,9 @@ export default function DoAssignment() {
   const [assignment, setAssignment] = useState(null)
   const [questions, setQuestions] = useState([])
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
-  const [answers, setAnswers] = useState({}) // { questionId: answerIndex }
+  const [answers, setAnswers] = useState({}) // { questionId: answerIndex or text }
+  const [files, setFiles] = useState({}) // { questionId: [File objects] }
+  const [uploadedFiles, setUploadedFiles] = useState({}) // { questionId: [uploaded file metadata] }
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [timeLeft, setTimeLeft] = useState(null)

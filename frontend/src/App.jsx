@@ -363,7 +363,7 @@ function AppContent() {
         <Footer className="app-footer">
           <div>🎉 Quiz Fun - Học vui, chơi hay! 🎉</div>
           <div style={{ fontSize: '12px', opacity: 0.8 }}>Made with ❤️ AnDang</div>
-         
+
         </Footer>
       )}
     </Layout>
