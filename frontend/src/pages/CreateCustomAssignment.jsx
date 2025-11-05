@@ -208,7 +208,15 @@ export default function CreateCustomAssignment() {
     const handleSubmit = async () => {
         try {
             setLoading(true)
-            const values = await form.validateFields()
+            const values = form.getFieldsValue()
+
+            // Validate required fields
+            if (!values.title || !values.description || !values.dueDate) {
+                message.error('Vui lòng điền đầy đủ thông tin bài tập')
+                setCurrentStep(0)
+                setLoading(false)
+                return
+            }
 
             // Create assignment
             const assignmentData = {
@@ -234,16 +242,22 @@ export default function CreateCustomAssignment() {
             // Save questions
             for (let i = 0; i < questions.length; i++) {
                 const q = questions[i]
+                
+                // Map frontend field names to backend API format
                 const questionData = {
-                    questionType: q.questionType,
+                    type: q.questionType, // 'multiple_choice' or 'essay'
                     questionText: q.questionText,
-                    optionA: q.optionA || null,
-                    optionB: q.optionB || null,
-                    optionC: q.optionC || null,
-                    optionD: q.optionD || null,
-                    correctAnswer: q.correctAnswer || null,
+                    choice1: q.optionA || null,
+                    choice2: q.optionB || null,
+                    choice3: q.optionC || null,
+                    choice4: q.optionD || null,
+                    correctIndex: q.questionType === 'multiple_choice' ? (q.correctAnswer || 0) : null,
                     points: q.points || 10,
-                    orderNum: i + 1
+                    questionOrder: i,
+                    maxScore: q.points || 10,
+                    requiresFile: q.questionType === 'essay' ? 0 : 0,
+                    allowedFileTypes: 'pdf,docx,jpg,png',
+                    explanation: q.explanation || null
                 }
 
                 if (q.id) {
