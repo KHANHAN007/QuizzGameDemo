@@ -22,6 +22,7 @@ import Login from './pages/Login'
 import TeacherDashboard from './pages/TeacherDashboard'
 import StudentDashboard from './pages/StudentDashboard'
 import AssignmentManagement from './pages/AssignmentManagement'
+import CreateCustomAssignment from './pages/CreateCustomAssignment'
 import AssignmentDetail from './pages/AssignmentDetail'
 import DoAssignment from './pages/DoAssignment'
 import AssignmentResult from './pages/AssignmentResult'
@@ -278,6 +279,22 @@ function AppContent() {
             element={
               <ProtectedRoute allowedRole="teacher">
                 <AssignmentManagement />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/teacher/assignments/create"
+            element={
+              <ProtectedRoute allowedRole="teacher">
+                <CreateCustomAssignment />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/teacher/assignments/:id/edit"
+            element={
+              <ProtectedRoute allowedRole="teacher">
+                <CreateCustomAssignment />
               </ProtectedRoute>
             }
           />
