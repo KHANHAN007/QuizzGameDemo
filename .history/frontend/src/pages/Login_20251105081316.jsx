@@ -9,17 +9,8 @@ export default function Login() {
   const { login, isAuthenticated, user } = useAuth()
   const [loading, setLoading] = useState(false)
 
-  // Debug: Log auth state
-  console.log('🔍 Login component render - Auth state:', {
-    isAuthenticated,
-    user: user ? { username: user.username, role: user.role } : null,
-    hasTokenInStorage: !!localStorage.getItem('token'),
-    hasUserInStorage: !!localStorage.getItem('user')
-  })
-
   // If already logged in, redirect to appropriate dashboard
   if (isAuthenticated) {
-    console.log('⚠️ Already authenticated, redirecting...', { role: user?.role })
     if (user.role === 'teacher') {
       return <Navigate to="/teacher/dashboard" replace />
     } else if (user.role === 'student') {
