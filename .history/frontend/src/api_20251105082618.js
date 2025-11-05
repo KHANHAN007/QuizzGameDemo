@@ -42,13 +42,13 @@ api.interceptors.response.use(
             // Only clear and redirect if NOT on login page or during login attempt
             const isLoginRequest = error.config?.url?.includes('/auth/login')
             const currentPath = window.location.pathname
-
+            
             if (!isLoginRequest) {
                 // Token expired or invalid (not a login attempt)
                 console.warn('🔒 401 Unauthorized - clearing auth and redirecting to login')
                 localStorage.removeItem('token')
                 localStorage.removeItem('user')
-
+                
                 // Only redirect if not already on login page
                 if (currentPath !== '/login') {
                     window.location.href = '/login'

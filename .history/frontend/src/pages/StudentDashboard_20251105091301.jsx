@@ -224,9 +224,9 @@ export default function StudentDashboard() {
         </Button>
       </div>
 
-      <Row gutter={16} style={{ marginBottom: 24, width: '100%' }}>
-        <Col xs={24} sm={12} md={6} style={{ marginBottom: 16, display: 'flex', paddingLeft:0 }}>
-          <Card style={{ height: '120px', width: '100%' }}>
+      <Row gutter={16} style={{ marginBottom: 24, width: '100%', maxWidth: '100%' }}>
+        <Col xs={24} sm={12} md={6} style={{ marginBottom: 16, display: 'flex' }}>
+          <Card style={{ height: '120px', width: '100%', flex: 1 }}>
             <Statistic
               title="Tổng bài tập"
               value={stats.total}
@@ -235,7 +235,7 @@ export default function StudentDashboard() {
           </Card>
         </Col>
         <Col xs={24} sm={12} md={6} style={{ marginBottom: 16, display: 'flex' }}>
-          <Card style={{ height: '120px', width: '100%' }}>
+          <Card style={{ height: '120px', width: '100%', flex: 1 }}>
             <Statistic
               title="Chưa làm"
               value={stats.pending}
@@ -245,7 +245,7 @@ export default function StudentDashboard() {
           </Card>
         </Col>
         <Col xs={24} sm={12} md={6} style={{ marginBottom: 16, display: 'flex' }}>
-          <Card style={{ height: '120px', width: '100%' }}>
+          <Card style={{ height: '120px', width: '100%', flex: 1 }}>
             <Statistic
               title="Đã hoàn thành"
               value={stats.completed}
@@ -254,8 +254,8 @@ export default function StudentDashboard() {
             />
           </Card>
         </Col>
-        <Col xs={24} sm={12} md={6} style={{ marginBottom: 16, display: 'flex', paddingRight:0 }}>
-          <Card style={{ height: '120px', width: '100%' }}>
+        <Col xs={24} sm={12} md={6} style={{ marginBottom: 16, display: 'flex' }}>
+          <Card style={{ height: '120px', width: '100%', flex: 1 }}>
             <Statistic
               title="Điểm trung bình"
               value={stats.avgScore}
@@ -268,9 +268,9 @@ export default function StudentDashboard() {
       </Row>
 
       {/* Filters Section */}
-      <Card style={{ marginBottom: 24, width: '100%'}}>
-        <Row gutter={[16, 16]} align="middle">
-          <Col xs={24} md={8} style={{height:48}}>
+      <Card style={{ marginBottom: 24, height: '172px', width: '100%', maxWidth: '100%', overflow: 'hidden' }}>
+        <Row gutter={[16, 16]} align="top" style={{ width: '100%' }}>
+          <Col xs={24} md={8} style={{ height: '48px' }}>
             <Input
               placeholder="Tìm kiếm bài tập..."
               prefix={<SearchOutlined />}
@@ -278,16 +278,18 @@ export default function StudentDashboard() {
               onChange={(e) => setSearchText(e.target.value)}
               allowClear
               size="large"
+              style={{ width: '100%', height: '48px' }}
             />
           </Col>
-          <Col xs={24} sm={12} md={8}>
+          <Col xs={24} sm={12} md={8} style={{ height: '48px' }}>
             <Select
-              style={{ width: '100%' }}
+              style={{ width: '100%', height: '48px' }}
               size="large"
               value={statusFilter}
               onChange={setStatusFilter}
               placeholder="Lọc theo trạng thái"
               suffixIcon={<FilterOutlined />}
+              dropdownMatchSelectWidth={true}
             >
               <Select.Option value="all">Tất cả trạng thái</Select.Option>
               <Select.Option value="pending">Chưa làm</Select.Option>
@@ -295,14 +297,15 @@ export default function StudentDashboard() {
               <Select.Option value="overdue">Quá hạn</Select.Option>
             </Select>
           </Col>
-          <Col xs={24} sm={12} md={8}>
+          <Col xs={24} sm={12} md={8} style={{ height: '48px' }}>
             <Select
-              style={{ width: '100%' }}
+              style={{ width: '100%', height: '48px' }}
               size="large"
               value={dueDateFilter}
               onChange={setDueDateFilter}
               placeholder="Lọc theo hạn nộp"
               suffixIcon={<ClockCircleOutlined />}
+              dropdownMatchSelectWidth={true}
             >
               <Select.Option value="all">Tất cả thời hạn</Select.Option>
               <Select.Option value="today">Hết hạn hôm nay</Select.Option>
@@ -315,12 +318,15 @@ export default function StudentDashboard() {
           marginTop: 16, 
           color: '#666', 
           fontSize: '14px',
-          minHeight: '24px',
+          height: '24px',
           display: 'flex',
-          alignItems: 'center'
+          alignItems: 'center',
+          overflow: 'hidden'
         }}>
-          <FilterOutlined style={{ marginRight: 8 }} /> 
-          Tìm thấy <strong style={{ margin: '0 4px', minWidth: '20px', display: 'inline-block', textAlign: 'center' }}>{filteredAssignments.length}</strong> bài tập
+          <FilterOutlined style={{ marginRight: 8, flexShrink: 0 }} /> 
+          <span style={{ whiteSpace: 'nowrap' }}>
+            Tìm thấy <strong style={{ margin: '0 4px', display: 'inline-block', minWidth: '30px', textAlign: 'center' }}>{filteredAssignments.length}</strong> bài tập
+          </span>
         </div>
       </Card>
 
@@ -440,7 +446,6 @@ export default function StudentDashboard() {
           margin: 0 auto;
           padding: 24px;
           box-sizing: border-box;
-          overflow-x: hidden;
         }
 
         .dashboard-header {
@@ -454,7 +459,6 @@ export default function StudentDashboard() {
           box-shadow: 0 2px 8px rgba(0,0,0,0.1);
           min-height: 100px;
           width: 100%;
-          max-width: 100%;
           box-sizing: border-box;
         }
 
@@ -471,32 +475,36 @@ export default function StudentDashboard() {
         .ant-card {
           border-radius: 12px;
           width: 100% !important;
-          height: 100%;
           display: flex;
           flex-direction: column;
-          box-sizing: border-box;
-          max-width: 100%;
+          overflow: hidden;
+        }
+
+        .student-dashboard .ant-card {
+          flex-shrink: 0;
         }
 
         .student-dashboard .ant-card-head {
           flex-shrink: 0;
           padding: 16px 24px;
           border-bottom: 1px solid #f0f0f0;
+          height: 56px;
           min-height: 56px;
-          box-sizing: border-box;
+          max-height: 56px;
+          overflow: hidden;
         }
 
         .student-dashboard .ant-card-body {
           padding: 20px;
-          min-height: 80px;
           flex: 1;
           display: flex;
           flex-direction: column;
-          box-sizing: border-box;
+          overflow: auto;
         }
 
         .ant-col {
           display: flex;
+          box-sizing: border-box;
         }
 
         .ant-list-item {
@@ -520,46 +528,52 @@ export default function StudentDashboard() {
         }
 
         .student-dashboard .ant-row {
-          width: 100%;
+          width: 100% !important;
+          max-width: 100% !important;
           display: flex;
           flex-wrap: wrap;
-          margin-left: 0 !important;
-          margin-right: 0 !important;
-          max-width: 100% !important;
+          box-sizing: border-box;
         }
 
         .student-dashboard .ant-col {
           flex-shrink: 0;
+          box-sizing: border-box;
+          max-width: 100%;
         }
 
         .student-dashboard .ant-input-lg {
-          height: 48px;
-          width: 100%;
-          line-height: 48px;
-          padding: 0 11px;
-        }
-
-        .student-dashboard .ant-input-affix-wrapper-lg {
           height: 48px !important;
-          padding: 0 11px;
-        }
-
-        .student-dashboard .ant-input-affix-wrapper-lg input {
-          height: 46px;
-          line-height: 46px;
-        }
-
-        .student-dashboard .ant-input-prefix {
-          margin-right: 8px;
+          width: 100%;
+          box-sizing: border-box;
         }
 
         .student-dashboard .ant-select-lg {
-          height: 48px;
+          height: 48px !important;
+          width: 100% !important;
         }
 
         .student-dashboard .ant-select-lg .ant-select-selector {
           height: 48px !important;
-          align-items: center;
+          line-height: 48px !important;
+          align-items: center !important;
+          padding: 0 11px !important;
+        }
+
+        .student-dashboard .ant-select-lg .ant-select-selection-search-input {
+          height: 46px !important;
+        }
+
+        .student-dashboard .ant-select-lg .ant-select-selection-item {
+          line-height: 46px !important;
+        }
+
+        .student-dashboard .ant-select-lg .ant-select-selection-placeholder {
+          line-height: 46px !important;
+        }
+
+        .student-dashboard .ant-input-affix-wrapper-lg {
+          height: 48px !important;
+          padding: 10px 11px !important;
         }
 
         .student-dashboard .ant-list-item-meta {

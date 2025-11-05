@@ -268,7 +268,7 @@ export default function StudentDashboard() {
       </Row>
 
       {/* Filters Section */}
-      <Card style={{ marginBottom: 24, width: '100%'}}>
+      <Card style={{ marginBottom: 24, minHeight: '160px', width: '100%', display}}>
         <Row gutter={[16, 16]} align="middle">
           <Col xs={24} md={8} style={{height:48}}>
             <Input

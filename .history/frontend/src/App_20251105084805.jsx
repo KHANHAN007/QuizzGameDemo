@@ -304,14 +304,6 @@ function AppContent() {
               </ProtectedRoute>
             }
           />
-          <Route
-            path="/student/submissions/:submissionId"
-            element={
-              <ProtectedRoute allowedRole="student">
-                <AssignmentResult />
-              </ProtectedRoute>
-            }
-          />
         </Routes>
       </Content>
 

@@ -225,7 +225,7 @@ export default function StudentDashboard() {
       </div>
 
       <Row gutter={16} style={{ marginBottom: 24, width: '100%' }}>
-        <Col xs={24} sm={12} md={6} style={{ marginBottom: 16, display: 'flex', paddingLeft:0 }}>
+        <Col xs={24} sm={12} md={6} style={{ marginBottom: 16, display: 'flex' }}>
           <Card style={{ height: '120px', width: '100%' }}>
             <Statistic
               title="Tổng bài tập"
@@ -254,8 +254,8 @@ export default function StudentDashboard() {
             />
           </Card>
         </Col>
-        <Col xs={24} sm={12} md={6} style={{ marginBottom: 16, display: 'flex', paddingRight:0 }}>
-          <Card style={{ height: '120px', width: '100%' }}>
+        <Col xs={24} sm={12} md={6} style={{ marginBottom: 16, display: 'flex' }}>
+          <Card style={{ height: '120px', width: '100%', padding }}>
             <Statistic
               title="Điểm trung bình"
               value={stats.avgScore}
@@ -268,9 +268,9 @@ export default function StudentDashboard() {
       </Row>
 
       {/* Filters Section */}
-      <Card style={{ marginBottom: 24, width: '100%'}}>
+      <Card style={{ marginBottom: 24, minHeight: '160px', width: '100%' }}>
         <Row gutter={[16, 16]} align="middle">
-          <Col xs={24} md={8} style={{height:48}}>
+          <Col xs={24} md={8}>
             <Input
               placeholder="Tìm kiếm bài tập..."
               prefix={<SearchOutlined />}
@@ -535,22 +535,6 @@ export default function StudentDashboard() {
         .student-dashboard .ant-input-lg {
           height: 48px;
           width: 100%;
-          line-height: 48px;
-          padding: 0 11px;
-        }
-
-        .student-dashboard .ant-input-affix-wrapper-lg {
-          height: 48px !important;
-          padding: 0 11px;
-        }
-
-        .student-dashboard .ant-input-affix-wrapper-lg input {
-          height: 46px;
-          line-height: 46px;
-        }
-
-        .student-dashboard .ant-input-prefix {
-          margin-right: 8px;
         }
 
         .student-dashboard .ant-select-lg {

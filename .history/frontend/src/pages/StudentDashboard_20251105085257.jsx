@@ -224,9 +224,9 @@ export default function StudentDashboard() {
         </Button>
       </div>
 
-      <Row gutter={16} style={{ marginBottom: 24, width: '100%' }}>
-        <Col xs={24} sm={12} md={6} style={{ marginBottom: 16, display: 'flex', paddingLeft:0 }}>
-          <Card style={{ height: '120px', width: '100%' }}>
+      <Row gutter={16} style={{ marginBottom: 24 }}>
+        <Col xs={24} sm={12} md={6}>
+          <Card>
             <Statistic
               title="Tổng bài tập"
               value={stats.total}
@@ -234,8 +234,8 @@ export default function StudentDashboard() {
             />
           </Card>
         </Col>
-        <Col xs={24} sm={12} md={6} style={{ marginBottom: 16, display: 'flex' }}>
-          <Card style={{ height: '120px', width: '100%' }}>
+        <Col xs={24} sm={12} md={6}>
+          <Card>
             <Statistic
               title="Chưa làm"
               value={stats.pending}
@@ -244,8 +244,8 @@ export default function StudentDashboard() {
             />
           </Card>
         </Col>
-        <Col xs={24} sm={12} md={6} style={{ marginBottom: 16, display: 'flex' }}>
-          <Card style={{ height: '120px', width: '100%' }}>
+        <Col xs={24} sm={12} md={6}>
+          <Card>
             <Statistic
               title="Đã hoàn thành"
               value={stats.completed}
@@ -254,8 +254,8 @@ export default function StudentDashboard() {
             />
           </Card>
         </Col>
-        <Col xs={24} sm={12} md={6} style={{ marginBottom: 16, display: 'flex', paddingRight:0 }}>
-          <Card style={{ height: '120px', width: '100%' }}>
+        <Col xs={24} sm={12} md={6}>
+          <Card>
             <Statistic
               title="Điểm trung bình"
               value={stats.avgScore}
@@ -268,9 +268,9 @@ export default function StudentDashboard() {
       </Row>
 
       {/* Filters Section */}
-      <Card style={{ marginBottom: 24, width: '100%'}}>
-        <Row gutter={[16, 16]} align="middle">
-          <Col xs={24} md={8} style={{height:48}}>
+      <Card style={{ marginBottom: 24 }}>
+        <Row gutter={[16, 16]}>
+          <Col xs={24} md={8}>
             <Input
               placeholder="Tìm kiếm bài tập..."
               prefix={<SearchOutlined />}
@@ -311,16 +311,8 @@ export default function StudentDashboard() {
             </Select>
           </Col>
         </Row>
-        <div style={{ 
-          marginTop: 16, 
-          color: '#666', 
-          fontSize: '14px',
-          minHeight: '24px',
-          display: 'flex',
-          alignItems: 'center'
-        }}>
-          <FilterOutlined style={{ marginRight: 8 }} /> 
-          Tìm thấy <strong style={{ margin: '0 4px', minWidth: '20px', display: 'inline-block', textAlign: 'center' }}>{filteredAssignments.length}</strong> bài tập
+        <div style={{ marginTop: 16, color: '#666', fontSize: '14px' }}>
+          <FilterOutlined /> Tìm thấy <strong>{filteredAssignments.length}</strong> bài tập
         </div>
       </Card>
 
@@ -342,7 +334,7 @@ export default function StudentDashboard() {
                 Bài tập hôm nay ({todayFiltered.length})
               </span>
             }
-            style={{ marginBottom: 24, width: '100%' }}
+            style={{ marginBottom: 24 }}
           >
             <List
               dataSource={todayFiltered}
@@ -379,8 +371,7 @@ export default function StudentDashboard() {
             )}
           />
         </Card>
-        )
-      })()}
+      )}
 
       <Card
         title={
@@ -389,13 +380,12 @@ export default function StudentDashboard() {
             Tất cả bài tập
           </span>
         }
-        style={{ width: '100%' }}
       >
-        {filteredAssignments.length === 0 ? (
-          <Empty description="Không tìm thấy bài tập nào" />
+        {assignments.length === 0 ? (
+          <Empty description="Chưa có bài tập nào được giao" />
         ) : (
           <List
-            dataSource={filteredAssignments}
+            dataSource={assignments}
             loading={loading}
             pagination={{ pageSize: 10 }}
             renderItem={(assignment) => (
@@ -436,11 +426,8 @@ export default function StudentDashboard() {
       <style>{`
         .student-dashboard {
           max-width: 1200px;
-          width: 100%;
           margin: 0 auto;
           padding: 24px;
-          box-sizing: border-box;
-          overflow-x: hidden;
         }
 
         .dashboard-header {
@@ -452,10 +439,6 @@ export default function StudentDashboard() {
           background: white;
           border-radius: 16px;
           box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-          min-height: 100px;
-          width: 100%;
-          max-width: 100%;
-          box-sizing: border-box;
         }
 
         .dashboard-header h1 {
@@ -466,169 +449,6 @@ export default function StudentDashboard() {
         .dashboard-header p {
           margin: 8px 0 0;
           color: #666;
-        }
-
-        .ant-card {
-          border-radius: 12px;
-          width: 100% !important;
-          height: 100%;
-          display: flex;
-          flex-direction: column;
-          box-sizing: border-box;
-          max-width: 100%;
-        }
-
-        .student-dashboard .ant-card-head {
-          flex-shrink: 0;
-          padding: 16px 24px;
-          border-bottom: 1px solid #f0f0f0;
-          min-height: 56px;
-          box-sizing: border-box;
-        }
-
-        .student-dashboard .ant-card-body {
-          padding: 20px;
-          min-height: 80px;
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          box-sizing: border-box;
-        }
-
-        .ant-col {
-          display: flex;
-        }
-
-        .ant-list-item {
-          padding: 16px !important;
-        }
-
-        .ant-statistic-title {
-          font-size: 14px;
-          margin-bottom: 8px;
-          white-space: nowrap;
-        }
-
-        .ant-statistic-content {
-          font-size: 24px;
-        }
-
-        .student-dashboard .ant-statistic {
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-        }
-
-        .student-dashboard .ant-row {
-          width: 100%;
-          display: flex;
-          flex-wrap: wrap;
-          margin-left: 0 !important;
-          margin-right: 0 !important;
-          max-width: 100% !important;
-        }
-
-        .student-dashboard .ant-col {
-          flex-shrink: 0;
-        }
-
-        .student-dashboard .ant-input-lg {
-          height: 48px;
-          width: 100%;
-          line-height: 48px;
-          padding: 0 11px;
-        }
-
-        .student-dashboard .ant-input-affix-wrapper-lg {
-          height: 48px !important;
-          padding: 0 11px;
-        }
-
-        .student-dashboard .ant-input-affix-wrapper-lg input {
-          height: 46px;
-          line-height: 46px;
-        }
-
-        .student-dashboard .ant-input-prefix {
-          margin-right: 8px;
-        }
-
-        .student-dashboard .ant-select-lg {
-          height: 48px;
-        }
-
-        .student-dashboard .ant-select-lg .ant-select-selector {
-          height: 48px !important;
-          align-items: center;
-        }
-
-        .student-dashboard .ant-list-item-meta {
-          flex: 1;
-          min-width: 0;
-        }
-
-        .student-dashboard .ant-list-item-meta-title {
-          margin-bottom: 8px;
-          white-space: normal;
-          word-break: break-word;
-        }
-
-        .student-dashboard .ant-list-item-meta-description {
-          white-space: normal;
-          word-break: break-word;
-        }
-
-        .student-dashboard .ant-list-item-action {
-          margin-left: 16px;
-          flex-shrink: 0;
-        }
-
-        .student-dashboard .ant-card-head-title {
-          font-size: 16px;
-          font-weight: 600;
-        }
-
-        .student-dashboard .ant-list {
-          min-height: 200px;
-          width: 100%;
-        }
-
-        .student-dashboard .ant-list-item {
-          width: 100%;
-          display: flex;
-          align-items: flex-start;
-        }
-
-        .student-dashboard .ant-empty {
-          min-height: 200px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          width: 100%;
-        }
-
-        * {
-          box-sizing: border-box;
-        }
-
-        .student-dashboard > * {
-          max-width: 100%;
-        }
-
-        @media (max-width: 768px) {
-          .student-dashboard {
-            padding: 16px;
-          }
-          
-          .dashboard-header {
-            flex-direction: column;
-            gap: 16px;
-            text-align: center;
-          }
-
-          .ant-statistic-content {
-            font-size: 20px;
-          }
         }
       `}</style>
     </div>
