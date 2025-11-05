@@ -382,8 +382,8 @@ export default function CreateCustomAssignment() {
                                 valuePropName="checked"
                                 initialValue={false}
                             >
-                                <Switch 
-                                    checkedChildren="Có" 
+                                <Switch
+                                    checkedChildren="Có"
                                     unCheckedChildren="Không"
                                 />
                             </Form.Item>

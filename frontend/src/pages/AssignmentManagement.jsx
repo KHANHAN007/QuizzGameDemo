@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  Card, Table, Button, Modal, Form, Input, Select, DatePicker,
-  message, Space, Tag, Popconfirm, Typography, Switch, Row, Col
+  Card, Table, Button, message, Space, Tag, Popconfirm, Typography, Row, Col, Input, Select
 } from 'antd'
 import {
   PlusOutlined, EditOutlined, DeleteOutlined, EyeOutlined,
@@ -11,29 +10,18 @@ import {
 import dayjs from 'dayjs'
 import {
   fetchAssignments,
-  createAssignment,
-  updateAssignment,
-  deleteAssignment,
-  fetchQuestionSets,
-  fetchUsers
+  deleteAssignment
 } from '../api'
 
 const { Title } = Typography
-const { TextArea } = Input
 
 export default function AssignmentManagement() {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
   const [assignments, setAssignments] = useState([])
   const [filteredAssignments, setFilteredAssignments] = useState([])
-  const [questionSets, setQuestionSets] = useState([])
-  const [students, setStudents] = useState([])
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [editingAssignment, setEditingAssignment] = useState(null)
   const [searchText, setSearchText] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
-  const [setFilter, setSetFilter] = useState('all')
-  const [form] = Form.useForm()
 
   useEffect(() => {
     loadData()
@@ -41,7 +29,7 @@ export default function AssignmentManagement() {
 
   useEffect(() => {
     applyFilters()
-  }, [assignments, searchText, statusFilter, setFilter])
+  }, [assignments, searchText, statusFilter])
 
   const applyFilters = () => {
     let filtered = [...assignments]
@@ -51,8 +39,7 @@ export default function AssignmentManagement() {
       const search = searchText.toLowerCase()
       filtered = filtered.filter(a =>
         a.title?.toLowerCase().includes(search) ||
-        a.description?.toLowerCase().includes(search) ||
-        a.questionSetName?.toLowerCase().includes(search)
+        a.description?.toLowerCase().includes(search)
       )
     }
 
@@ -67,49 +54,19 @@ export default function AssignmentManagement() {
       })
     }
 
-    // Question set filter
-    if (setFilter !== 'all') {
-      filtered = filtered.filter(a => a.questionSetId === parseInt(setFilter))
-    }
-
     setFilteredAssignments(filtered)
   }
 
   const loadData = async () => {
     setLoading(true)
     try {
-      const [assignmentsData, setsData, studentsData] = await Promise.all([
-        fetchAssignments(),
-        fetchQuestionSets(),
-        fetchUsers('student')
-      ])
-
+      const assignmentsData = await fetchAssignments()
       setAssignments(assignmentsData || [])
-      setQuestionSets(setsData || [])
-      setStudents(studentsData || [])
     } catch (error) {
       message.error('Không thể tải dữ liệu: ' + error.message)
     } finally {
       setLoading(false)
     }
-  }
-
-  const handleCreate = () => {
-    setEditingAssignment(null)
-    form.resetFields()
-    setIsModalOpen(true)
-  }
-
-  const handleEdit = (record) => {
-    setEditingAssignment(record)
-    form.setFieldsValue({
-      title: record.title,
-      description: record.description,
-      questionSetId: record.questionSetId,
-      studentIds: record.studentIds || [],
-      dueDate: record.dueDate ? dayjs.unix(record.dueDate) : null
-    })
-    setIsModalOpen(true)
   }
 
   const handleDelete = async (id) => {
@@ -119,28 +76,6 @@ export default function AssignmentManagement() {
       loadData()
     } catch (error) {
       message.error('Lỗi khi xóa: ' + error.message)
-    }
-  }
-
-  const handleSubmit = async (values) => {
-    try {
-      const data = {
-        ...values,
-        dueDate: values.dueDate.unix() // Convert to Unix timestamp
-      }
-
-      if (editingAssignment) {
-        await updateAssignment(editingAssignment.id, data)
-        message.success('Cập nhật bài tập thành công!')
-      } else {
-        await createAssignment(data)
-        message.success('Tạo bài tập mới thành công!')
-      }
-
-      setIsModalOpen(false)
-      loadData()
-    } catch (error) {
-      message.error('Lỗi: ' + error.message)
     }
   }
 
@@ -159,15 +94,26 @@ export default function AssignmentManagement() {
       )
     },
     {
-      title: 'Bộ câu hỏi',
-      dataIndex: 'questionSetName',
-      key: 'questionSetName',
-      render: (text) => <Tag color="blue">{text}</Tag>
+      title: 'Loại',
+      dataIndex: 'questionSetId',
+      key: 'type',
+      render: (questionSetId) => (
+        <Tag color={questionSetId === 1 ? 'purple' : 'blue'}>
+          {questionSetId === 1 ? 'Bài tập tùy chỉnh' : 'Bộ câu hỏi'}
+        </Tag>
+      )
     },
     {
-      title: 'Số học sinh',
-      dataIndex: 'studentCount',
-      key: 'studentCount',
+      title: 'Số câu hỏi',
+      dataIndex: 'questionCount',
+      key: 'questionCount',
+      align: 'center',
+      render: (count) => <Tag color="cyan">{count || 0} câu</Tag>
+    },
+    {
+      title: 'Học sinh',
+      dataIndex: 'assignedCount',
+      key: 'assignedCount',
       align: 'center',
       render: (count) => <Tag color="green">{count || 0} HS</Tag>
     },
@@ -208,7 +154,7 @@ export default function AssignmentManagement() {
           <Button
             type="link"
             icon={<EditOutlined />}
-            onClick={() => handleEdit(record)}
+            onClick={() => navigate(`/teacher/assignments/${record.id}/edit`)}
           >
             Sửa
           </Button>
@@ -247,7 +193,7 @@ export default function AssignmentManagement() {
 
         {/* Filters */}
         <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
-          <Col xs={24} md={8}>
+          <Col xs={24} md={12}>
             <Input
               placeholder="Tìm kiếm bài tập..."
               prefix={<SearchOutlined />}
@@ -257,7 +203,7 @@ export default function AssignmentManagement() {
               size="large"
             />
           </Col>
-          <Col xs={24} sm={12} md={8}>
+          <Col xs={24} md={12}>
             <Select
               style={{ width: '100%' }}
               size="large"
@@ -269,23 +215,6 @@ export default function AssignmentManagement() {
               <Select.Option value="all">Tất cả trạng thái</Select.Option>
               <Select.Option value="active">Đang hoạt động</Select.Option>
               <Select.Option value="overdue">Quá hạn</Select.Option>
-            </Select>
-          </Col>
-          <Col xs={24} sm={12} md={8}>
-            <Select
-              style={{ width: '100%' }}
-              size="large"
-              value={setFilter}
-              onChange={setSetFilter}
-              placeholder="Lọc theo bộ câu hỏi"
-              suffixIcon={<FilterOutlined />}
-            >
-              <Select.Option value="all">Tất cả bộ câu hỏi</Select.Option>
-              {questionSets.map(set => (
-                <Select.Option key={set.id} value={set.id}>
-                  {set.name}
-                </Select.Option>
-              ))}
             </Select>
           </Col>
         </Row>
@@ -307,115 +236,6 @@ export default function AssignmentManagement() {
           }}
         />
       </Card>
-
-      <Modal
-        title={editingAssignment ? 'Chỉnh sửa bài tập' : 'Tạo bài tập mới'}
-        open={isModalOpen}
-        onCancel={() => setIsModalOpen(false)}
-        onOk={() => form.submit()}
-        width={600}
-        okText={editingAssignment ? 'Cập nhật' : 'Tạo'}
-        cancelText="Hủy"
-      >
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleSubmit}
-          autoComplete="off"
-        >
-          <Form.Item
-            name="title"
-            label="Tiêu đề bài tập"
-            rules={[{ required: true, message: 'Vui lòng nhập tiêu đề!' }]}
-          >
-            <Input placeholder="VD: Bài tập tuần 1 - Toán học" />
-          </Form.Item>
-
-          <Form.Item
-            name="description"
-            label="Mô tả"
-          >
-            <TextArea
-              rows={3}
-              placeholder="Mô tả ngắn về bài tập này..."
-            />
-          </Form.Item>
-
-          <Form.Item
-            name="questionSetId"
-            label="Bộ câu hỏi"
-            rules={[{ required: true, message: 'Vui lòng chọn bộ câu hỏi!' }]}
-          >
-            <Select
-              placeholder="Chọn bộ câu hỏi"
-              showSearch
-              optionFilterProp="children"
-            >
-              {questionSets.map(set => (
-                <Select.Option key={set.id} value={set.id}>
-                  {set.name} ({set.description})
-                </Select.Option>
-              ))}
-            </Select>
-          </Form.Item>
-
-          <Form.Item
-            name="studentIds"
-            label="Giao cho học sinh"
-            rules={[{ required: true, message: 'Vui lòng chọn ít nhất 1 học sinh!' }]}
-          >
-            <Select
-              mode="multiple"
-              placeholder="Chọn học sinh hoặc cả lớp"
-              showSearch
-              optionFilterProp="children"
-              filterOption={(input, option) =>
-                option.children.toLowerCase().includes(input.toLowerCase())
-              }
-            >
-              {/* Group by class */}
-              {Array.from(new Set(students.map(s => s.class))).map(className => (
-                <Select.OptGroup key={className} label={`Lớp ${className}`}>
-                  {students
-                    .filter(s => s.class === className)
-                    .map(student => (
-                      <Select.Option key={student.id} value={student.id}>
-                        {student.fullName} ({student.username})
-                      </Select.Option>
-                    ))}
-                </Select.OptGroup>
-              ))}
-            </Select>
-          </Form.Item>
-
-          <Form.Item
-            name="allowRetake"
-            label="Cho phép làm lại"
-            valuePropName="checked"
-            initialValue={false}
-            tooltip="Nếu bật, học sinh có thể làm bài nhiều lần"
-          >
-            <Switch
-              checkedChildren="Cho phép"
-              unCheckedChildren="Không"
-            />
-          </Form.Item>
-
-          <Form.Item
-            name="dueDate"
-            label="Hạn nộp"
-            rules={[{ required: true, message: 'Vui lòng chọn hạn nộp!' }]}
-          >
-            <DatePicker
-              showTime
-              format="DD/MM/YYYY HH:mm"
-              style={{ width: '100%' }}
-              placeholder="Chọn ngày và giờ"
-              disabledDate={(current) => current && current < dayjs().startOf('day')}
-            />
-          </Form.Item>
-        </Form>
-      </Modal>
     </div>
   )
 }
