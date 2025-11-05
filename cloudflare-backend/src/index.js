@@ -4,6 +4,7 @@
  */
 
 import { hashPassword, verifyPassword, generateToken, verifyToken, requireAuth, requireRole } from './auth.js';
+import { uploadFile, downloadFile, deleteFile, getSubmissionFiles } from './file-upload.js';
 
 // CORS headers
 const corsHeaders = {
@@ -1484,6 +1485,28 @@ export default {
             if (path === '/api/submissions' && method === 'POST') {
                 const data = await request.json();
                 return await submitAssignment(env, request, data);
+            }
+
+            // ============================================
+            // FILE UPLOAD ROUTES
+            // ============================================
+            if (path === '/api/upload' && method === 'POST') {
+                return await uploadFile(request, env);
+            }
+
+            if (path.match(/^\/api\/files\/\d+$/) && method === 'GET') {
+                const fileId = path.split('/')[3];
+                return await downloadFile(fileId, env);
+            }
+
+            if (path.match(/^\/api\/files\/\d+$/) && method === 'DELETE') {
+                const fileId = path.split('/')[3];
+                return await deleteFile(fileId, env);
+            }
+
+            if (path.match(/^\/api\/submissions\/\d+\/files$/) && method === 'GET') {
+                const submissionId = path.split('/')[3];
+                return await getSubmissionFiles(submissionId, env);
             }
 
             // ============================================

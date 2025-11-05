@@ -8,6 +8,11 @@ binding = "DB"
 database_name = "quiz-game-db"
 database_id = "77b7cad7-2620-4c79-94b3-5969dc1f93e7"
 
+# R2 Storage binding for file uploads
+[[r2_buckets]]
+binding = "R2"
+bucket_name = "quiz-game-files"
+
 # CORS settings
 [env.production]
 vars = { ENVIRONMENT = "production" }
