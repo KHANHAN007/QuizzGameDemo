@@ -346,13 +346,7 @@ function AppContent() {
         <Footer className="app-footer">
           <div>🎉 Quiz Fun - Học vui, chơi hay! 🎉</div>
           <div style={{ fontSize: '12px', opacity: 0.8 }}>Made with ❤️ AnDang</div>
-          <div style={{ marginTop: '60px', textAlign: 'center', color: '#999' }}>
-            <Space split={<Divider type="vertical" />}>
-              <Text type="secondary">Made with ❤️ by AnDang</Text>
-              <Text type="secondary">Version 2.0</Text>
-              <Text type="secondary">2025</Text>
-            </Space>
-          </div>
+         
         </Footer>
       )}
     </Layout>
