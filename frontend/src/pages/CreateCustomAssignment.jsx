@@ -32,6 +32,7 @@ export default function CreateCustomAssignment() {
         title: '',
         description: '',
         dueDate: null,
+        allowRetake: false,
         assignedTo: []
     })
 
@@ -197,7 +198,7 @@ export default function CreateCustomAssignment() {
             try {
                 await form.validateFields(['title', 'description', 'dueDate'])
                 // Save Step 1 data to state before moving to Step 2
-                const values = form.getFieldsValue(['title', 'description', 'dueDate'])
+                const values = form.getFieldsValue(['title', 'description', 'dueDate', 'allowRetake'])
                 setFormData(prev => ({ ...prev, ...values }))
                 setCurrentStep(1)
             } catch (error) {
@@ -264,7 +265,7 @@ export default function CreateCustomAssignment() {
                 questionCount: questions.length,
                 studentIds: selectedStudents, // Backend expects 'studentIds', not 'assignedStudents'
                 status: 'active',
-                allowRetake: false
+                allowRetake: allValues.allowRetake || false
             }
 
             let assignmentId
@@ -372,6 +373,18 @@ export default function CreateCustomAssignment() {
                                     style={{ width: '100%' }}
                                     size="large"
                                     disabledDate={(current) => current && current < dayjs().startOf('day')}
+                                />
+                            </Form.Item>
+
+                            <Form.Item
+                                name="allowRetake"
+                                label="Cho phép làm lại"
+                                valuePropName="checked"
+                                initialValue={false}
+                            >
+                                <Switch 
+                                    checkedChildren="Có" 
+                                    unCheckedChildren="Không"
                                 />
                             </Form.Item>
 
@@ -528,9 +541,10 @@ export default function CreateCustomAssignment() {
 
                             <Title level={5}>Tổng kết</Title>
                             <Card>
-                                <p><strong>Tiêu đề:</strong> {form.getFieldValue('title')}</p>
-                                <p><strong>Mô tả:</strong> {form.getFieldValue('description')}</p>
-                                <p><strong>Hạn nộp:</strong> {form.getFieldValue('dueDate')?.format('DD/MM/YYYY HH:mm')}</p>
+                                <p><strong>Tiêu đề:</strong> {formData.title || form.getFieldValue('title')}</p>
+                                <p><strong>Mô tả:</strong> {formData.description || form.getFieldValue('description')}</p>
+                                <p><strong>Hạn nộp:</strong> {(formData.dueDate || form.getFieldValue('dueDate'))?.format('DD/MM/YYYY HH:mm')}</p>
+                                <p><strong>Cho phép làm lại:</strong> {formData.allowRetake ? '✅ Có' : '❌ Không'}</p>
                                 <p><strong>Số câu hỏi:</strong> {questions.length}</p>
                                 <p><strong>Trắc nghiệm:</strong> {questions.filter(q => q.questionType === 'multiple_choice').length}</p>
                                 <p><strong>Tự luận:</strong> {questions.filter(q => q.questionType === 'essay').length}</p>
