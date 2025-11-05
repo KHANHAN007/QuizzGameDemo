@@ -32,7 +32,7 @@ import { useAuth } from '../contexts/AuthContext'
 import audioManager from '../utils/audioManager'
 import './DoAssignment.css'
 
-// Removed deprecated Countdown - using Statistic.Timer instead
+const { Countdown } = Statistic
 
 export default function DoAssignment() {
   const { id } = useParams()
@@ -290,7 +290,7 @@ export default function DoAssignment() {
       {/* Header */}
       <Card style={{ marginBottom: '24px' }}>
         <Row gutter={[16, 16]} align="middle">
-          <Col xs={24} md={10}>
+          <Col xs={24} md={12}>
             <h2 style={{ margin: 0 }}>
               📝 {assignment.title || 'Bài tập'}
             </h2>
@@ -299,7 +299,7 @@ export default function DoAssignment() {
             </p>
           </Col>
 
-          <Col xs={24} md={14} style={{ textAlign: 'right'}}>
+          <Col xs={24} md={12} style={{ textAlign: 'right', wi}}>
             <Space size="large">
               {/* Audio Controls */}
               <Space direction="vertical" size="small" style={{ textAlign: 'center' }}>
@@ -327,11 +327,10 @@ export default function DoAssignment() {
               </Space>
 
               {timeLeft !== null && (
-                <Statistic.Timer
+                <Countdown
                   title={<><ClockCircleOutlined /> Thời gian còn lại</>}
                   value={Date.now() + timeLeft}
                   format="HH:mm:ss"
-                  type="countdown"
                   valueStyle={{ fontSize: '24px', color: timeLeft < 300000 ? '#ff4d4f' : '#1890ff' }}
                 />
               )}
@@ -369,7 +368,7 @@ export default function DoAssignment() {
             </div>
 
             <div className="question-text" style={{ fontSize: '20px', fontWeight: 600, marginBottom: '32px' }}>
-              {currentQuestion.text || currentQuestion.question}
+              {currentQuestion.question}
             </div>
 
             <Radio.Group

@@ -327,11 +327,10 @@ export default function DoAssignment() {
               </Space>
 
               {timeLeft !== null && (
-                <Statistic.Timer
+                <Countdown
                   title={<><ClockCircleOutlined /> Thời gian còn lại</>}
                   value={Date.now() + timeLeft}
                   format="HH:mm:ss"
-                  type="countdown"
                   valueStyle={{ fontSize: '24px', color: timeLeft < 300000 ? '#ff4d4f' : '#1890ff' }}
                 />
               )}

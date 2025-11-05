@@ -222,8 +222,8 @@ function AppContent() {
                     }}
                     icon={<UserOutlined />}
                   />
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center', gap:'4px' }}>
-                    <span style={{ fontWeight: 600, fontSize: '14px', display:'flex', alignItems:'center', height:'20px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                    <span style={{ fontWeight: 600, fontSize: '14px' }}>
                       {user?.fullName || user?.username}
                     </span>
                     {getRoleBadge()}
