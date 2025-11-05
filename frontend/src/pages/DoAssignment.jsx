@@ -310,7 +310,7 @@ export default function DoAssignment() {
             </p>
           </Col>
 
-          <Col xs={24} md={14} style={{ textAlign: 'right'}}>
+          <Col xs={24} md={14} style={{ textAlign: 'right' }}>
             <Space size="large">
               {/* Audio Controls */}
               <Space direction="vertical" size="small" style={{ textAlign: 'center' }}>

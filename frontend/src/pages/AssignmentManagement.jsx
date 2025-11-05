@@ -235,24 +235,14 @@ export default function AssignmentManagement() {
           <Title level={3} style={{ margin: 0 }}>
             <FileTextOutlined /> Quản lý bài tập
           </Title>
-          <Space>
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={handleCreate}
-              size="large"
-            >
-              Tạo từ bộ câu hỏi
-            </Button>
-            <Button
-              type="default"
-              icon={<FileTextOutlined />}
-              onClick={() => navigate('/teacher/assignments/create')}
-              size="large"
-            >
-              Tạo bài tập tùy chỉnh
-            </Button>
-          </Space>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => navigate('/teacher/assignments/create')}
+            size="large"
+          >
+            Tạo bài tập mới
+          </Button>
         </div>
 
         {/* Filters */}
