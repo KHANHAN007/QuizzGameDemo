@@ -447,6 +447,170 @@ async function deleteAssignment(env, request, id) {
 }
 
 // ============================================
+// ASSIGNMENT QUESTIONS HANDLERS
+// ============================================
+
+async function getAssignmentQuestions(env, request, assignmentId) {
+    try {
+        const authResult = await requireAuth(request, env);
+        if (authResult.error) return errorResponse(authResult.error, authResult.status);
+
+        const assignment = await env.DB.prepare('SELECT * FROM assignments WHERE id = ?').bind(assignmentId).first();
+        if (!assignment) return errorResponse('Assignment not found', 404);
+
+        const user = authResult.user;
+        if (user.role === 'teacher' && assignment.teacherId !== user.id) {
+            return errorResponse('Forbidden', 403);
+        }
+
+        if (user.role === 'student') {
+            const assigned = await env.DB.prepare('SELECT * FROM assignment_students WHERE assignmentId = ? AND studentId = ?')
+                .bind(assignmentId, user.id).first();
+            if (!assigned) return errorResponse('Forbidden', 403);
+        }
+
+        const { results: questions } = await env.DB.prepare(`
+            SELECT * FROM assignment_questions 
+            WHERE assignmentId = ? 
+            ORDER BY questionOrder ASC, id ASC
+        `).bind(assignmentId).all();
+
+        return jsonResponse(questions);
+    } catch (error) {
+        console.error('getAssignmentQuestions error:', error);
+        return errorResponse(error.message);
+    }
+}
+
+async function createAssignmentQuestion(env, request, assignmentId, data) {
+    try {
+        const authResult = await requireAuth(request, env);
+        if (authResult.error) return errorResponse(authResult.error, authResult.status);
+
+        const roleCheck = requireRole(authResult.user, ['teacher']);
+        if (roleCheck) return errorResponse(roleCheck.error, roleCheck.status);
+
+        const assignment = await env.DB.prepare('SELECT * FROM assignments WHERE id = ? AND teacherId = ?')
+            .bind(assignmentId, authResult.user.id).first();
+        if (!assignment) return errorResponse('Assignment not found or access denied', 404);
+
+        const { type, questionText, choice1, choice2, choice3, choice4, correctIndex, maxScore, requiresFile, allowedFileTypes, explanation, points, questionOrder } = data;
+
+        if (!type || !questionText) return errorResponse('Missing required fields', 400);
+        if (type !== 'multiple_choice' && type !== 'essay') return errorResponse('Invalid question type', 400);
+        if (type === 'multiple_choice' && (!choice1 || !choice2 || correctIndex === undefined)) {
+            return errorResponse('Multiple choice questions require at least 2 choices and correct answer', 400);
+        }
+
+        const result = await env.DB.prepare(`
+            INSERT INTO assignment_questions 
+            (assignmentId, type, questionText, questionOrder, points, choice1, choice2, choice3, choice4, correctIndex, maxScore, requiresFile, allowedFileTypes, explanation)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `).bind(
+            assignmentId, type, questionText, questionOrder || 0, points || 10,
+            choice1 || null, choice2 || null, choice3 || null, choice4 || null,
+            correctIndex !== undefined ? correctIndex : null,
+            maxScore || (points || 10),
+            requiresFile ? 1 : 0,
+            allowedFileTypes || 'pdf,docx,jpg,png',
+            explanation || null
+        ).run();
+
+        await env.DB.prepare('UPDATE assignments SET hasCustomQuestions = 1 WHERE id = ?').bind(assignmentId).run();
+
+        const newQuestion = await env.DB.prepare('SELECT * FROM assignment_questions WHERE id = ?')
+            .bind(result.meta.last_row_id).first();
+
+        return jsonResponse(newQuestion, 201);
+    } catch (error) {
+        console.error('createAssignmentQuestion error:', error);
+        return errorResponse(error.message);
+    }
+}
+
+async function updateAssignmentQuestion(env, request, questionId, data) {
+    try {
+        const authResult = await requireAuth(request, env);
+        if (authResult.error) return errorResponse(authResult.error, authResult.status);
+
+        const roleCheck = requireRole(authResult.user, ['teacher']);
+        if (roleCheck) return errorResponse(roleCheck.error, roleCheck.status);
+
+        const question = await env.DB.prepare(`
+            SELECT aq.*, a.teacherId 
+            FROM assignment_questions aq
+            INNER JOIN assignments a ON aq.assignmentId = a.id
+            WHERE aq.id = ?
+        `).bind(questionId).first();
+
+        if (!question || question.teacherId !== authResult.user.id) {
+            return errorResponse('Question not found or access denied', 404);
+        }
+
+        const { questionText, choice1, choice2, choice3, choice4, correctIndex, maxScore, requiresFile, allowedFileTypes, explanation, points, questionOrder } = data;
+
+        await env.DB.prepare(`
+            UPDATE assignment_questions 
+            SET questionText = COALESCE(?, questionText),
+                choice1 = COALESCE(?, choice1),
+                choice2 = COALESCE(?, choice2),
+                choice3 = COALESCE(?, choice3),
+                choice4 = COALESCE(?, choice4),
+                correctIndex = COALESCE(?, correctIndex),
+                maxScore = COALESCE(?, maxScore),
+                requiresFile = COALESCE(?, requiresFile),
+                allowedFileTypes = COALESCE(?, allowedFileTypes),
+                explanation = COALESCE(?, explanation),
+                points = COALESCE(?, points),
+                questionOrder = COALESCE(?, questionOrder)
+            WHERE id = ?
+        `).bind(
+            questionText || null, choice1 || null, choice2 || null, choice3 || null, choice4 || null,
+            correctIndex !== undefined ? correctIndex : null,
+            maxScore !== undefined ? maxScore : null,
+            requiresFile !== undefined ? (requiresFile ? 1 : 0) : null,
+            allowedFileTypes || null, explanation || null,
+            points !== undefined ? points : null,
+            questionOrder !== undefined ? questionOrder : null,
+            questionId
+        ).run();
+
+        const updated = await env.DB.prepare('SELECT * FROM assignment_questions WHERE id = ?').bind(questionId).first();
+        return jsonResponse(updated);
+    } catch (error) {
+        console.error('updateAssignmentQuestion error:', error);
+        return errorResponse(error.message);
+    }
+}
+
+async function deleteAssignmentQuestion(env, request, questionId) {
+    try {
+        const authResult = await requireAuth(request, env);
+        if (authResult.error) return errorResponse(authResult.error, authResult.status);
+
+        const roleCheck = requireRole(authResult.user, ['teacher']);
+        if (roleCheck) return errorResponse(roleCheck.error, roleCheck.status);
+
+        const question = await env.DB.prepare(`
+            SELECT aq.*, a.teacherId 
+            FROM assignment_questions aq
+            INNER JOIN assignments a ON aq.assignmentId = a.id
+            WHERE aq.id = ?
+        `).bind(questionId).first();
+
+        if (!question || question.teacherId !== authResult.user.id) {
+            return errorResponse('Question not found or access denied', 404);
+        }
+
+        await env.DB.prepare('DELETE FROM assignment_questions WHERE id = ?').bind(questionId).run();
+        return jsonResponse({ message: 'Question deleted successfully' });
+    } catch (error) {
+        console.error('deleteAssignmentQuestion error:', error);
+        return errorResponse(error.message);
+    }
+}
+
+// ============================================
 // SUBMISSIONS HANDLERS
 // ============================================
 
@@ -1280,6 +1444,29 @@ export default {
             if (path.match(/^\/api\/assignments\/\d+$/) && method === 'DELETE') {
                 const id = path.split('/')[3];
                 return await deleteAssignment(env, request, id);
+            }
+
+            // Assignment Questions Routes
+            if (path.match(/^\/api\/assignments\/\d+\/questions$/) && method === 'GET') {
+                const assignmentId = path.split('/')[3];
+                return await getAssignmentQuestions(env, request, assignmentId);
+            }
+
+            if (path.match(/^\/api\/assignments\/\d+\/questions$/) && method === 'POST') {
+                const assignmentId = path.split('/')[3];
+                const data = await request.json();
+                return await createAssignmentQuestion(env, request, assignmentId, data);
+            }
+
+            if (path.match(/^\/api\/assignment-questions\/\d+$/) && method === 'PUT') {
+                const questionId = path.split('/')[3];
+                const data = await request.json();
+                return await updateAssignmentQuestion(env, request, questionId, data);
+            }
+
+            if (path.match(/^\/api\/assignment-questions\/\d+$/) && method === 'DELETE') {
+                const questionId = path.split('/')[3];
+                return await deleteAssignmentQuestion(env, request, questionId);
             }
 
             // ============================================
