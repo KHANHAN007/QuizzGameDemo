@@ -7,7 +7,7 @@ import { requireAuth, requireRole } from './auth.js';
 function jsonResponse(data, status = 200) {
     return new Response(JSON.stringify(data), {
         status,
-        headers: { 
+        headers: {
             'Content-Type': 'application/json',
             'Access-Control-Allow-Origin': '*'
         },

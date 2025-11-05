@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
     Card, Form, Input, DatePicker, Button, Space, message, Steps,
-    Radio, InputNumber, Divider, Typography, List, Modal, Tag, Row, Col, Switch, Upload
+    Radio, InputNumber, Divider, Typography, List, Modal, Tag, Row, Col, Switch, Upload, Select
 } from 'antd'
 import {
     PlusOutlined, DeleteOutlined, ArrowLeftOutlined, SaveOutlined,
@@ -76,7 +76,7 @@ export default function CreateCustomAssignment() {
                 }
             })
             if (!response.ok) throw new Error('Export failed')
-            
+
             const blob = await response.blob()
             const url = window.URL.createObjectURL(blob)
             const a = document.createElement('a')
@@ -95,10 +95,10 @@ export default function CreateCustomAssignment() {
             message.error('Vui lòng lưu bài tập trước khi nhập CSV')
             return false
         }
-        
+
         const formData = new FormData()
         formData.append('file', file)
-        
+
         try {
             const response = await fetch(`${api.baseURL}/assignments/${id}/import-csv`, {
                 method: 'POST',
@@ -107,16 +107,16 @@ export default function CreateCustomAssignment() {
                 },
                 body: formData
             })
-            
+
             if (!response.ok) throw new Error('Import failed')
-            
+
             const result = await response.json()
             message.success(`Đã nhập ${result.questions.length} câu hỏi từ CSV`)
             loadAssignment() // Reload to show imported questions
         } catch (error) {
             message.error('Không thể nhập CSV: ' + error.message)
         }
-        
+
         return false // Prevent auto upload
     }
 
@@ -343,7 +343,7 @@ export default function CreateCustomAssignment() {
                                     >
                                         Thêm câu hỏi
                                     </Button>
-                                    
+
                                     <Upload
                                         accept=".csv"
                                         beforeUpload={handleImportCSV}
@@ -353,9 +353,9 @@ export default function CreateCustomAssignment() {
                                             Nhập từ CSV
                                         </Button>
                                     </Upload>
-                                    
-                                    <Button 
-                                        icon={<DownloadOutlined />} 
+
+                                    <Button
+                                        icon={<DownloadOutlined />}
                                         onClick={handleExportCSV}
                                         size="large"
                                         disabled={!id}
@@ -363,7 +363,7 @@ export default function CreateCustomAssignment() {
                                         Xuất CSV
                                     </Button>
                                 </Space>
-                                
+
                                 <div style={{ marginTop: 8 }}>
                                     <Text type="secondary">
                                         Tổng: {questions.length} câu hỏi
